@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os
 
 import numpy as np
@@ -17,11 +15,10 @@ class ColorCheckerDataset(data.Dataset):
         self.__train = train
         self.__da = DataAugmenter()
 
-        base_path_to_data = "dataset"
-        path_to_folds = os.path.join(base_path_to_data, "folds.mat")
-        path_to_metadata = os.path.join(base_path_to_data, "color_checker_metadata.txt")
-        self.__path_to_data = os.path.join(base_path_to_data, "ndata")
-        self.__path_to_label = os.path.join(base_path_to_data, "nlabel")
+        path_to_folds = os.path.join("dataset", "folds.mat")
+        path_to_metadata = os.path.join("dataset", "color_checker_metadata.txt")
+        self.__path_to_data = os.path.join("dataset", "preprocessed", "numpy_data")
+        self.__path_to_label = os.path.join("dataset", "preprocessed", "numpy_labels")
 
         folds = scipy.io.loadmat(path_to_folds)
         img_idx = folds['tr_split' if self.__train else 'te_split'][0][folds_num][0]
@@ -41,13 +38,7 @@ class ColorCheckerDataset(data.Dataset):
             img = self.__da.crop(img)
 
         img = np.clip(img, 0.0, 65535.0) * (1.0 / 65535)
-
-        # BGR to RGB
-        img = img[:, :, ::-1]
-        img = np.power(img, (1.0 / 2.2))
-
-        # HWC to CHW
-        img = img.transpose(2, 0, 1)
+        img = self.__da.hwc_to_chw(self.__da.linear_to_non_linear(self.__da.bgr_to_rgb(img)))
 
         img = torch.from_numpy(img.copy())
         illuminant = torch.from_numpy(illuminant.copy())

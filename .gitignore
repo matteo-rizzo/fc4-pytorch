@@ -766,8 +766,8 @@ tags
 .idea/vcs.xml
 assets/
 dataset/images/
-dataset/ndata/
-dataset/nlabel/
+dataset/numpy_data/
+dataset/numpy_labels/
 trained_models/
 /dataset/dataset/
 /logs/
@@ -967,3 +967,4 @@ modules.xml
 *.ipr
 
 # End of https://www.toptal.com/developers/gitignore/api/pycharm+iml
+/dataset/preprocessed/

@@ -2,30 +2,27 @@ import os
 import time
 
 import torch
-from torch.utils.data import DataLoader
-
 from auxiliary.settings import DEVICE
 from auxiliary.utils import print_metrics, log_metrics
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.fc4.ModelFC4 import ModelFC4
 from classes.training.Evaluator import Evaluator
 from classes.training.LossTracker import LossTracker
+from torch.utils.data import DataLoader
 
 EPOCHS = 2000
-BATCH_SIZE = 16
+BATCH_SIZE = 1
 LEARNING_RATE = 0.0003
 FOLD_NUM = 0
 
 RELOAD_CHECKPOINT = False
-PATH_TO_PTH_CHECKPOINT = os.path.join("trained_models", "fold" + str(FOLD_NUM) + ".pth")
+PATH_TO_PTH_CHECKPOINT = os.path.join("trained_models", "fold{}.pth".format(FOLD_NUM))
 
 
 def main():
     path_to_log = os.path.join("logs", "fold_{}_{}".format(str(FOLD_NUM), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
     path_to_metrics_log = os.path.join(path_to_log, "metrics.csv")
-
-    print('\n * Training fold {:d} * \n'.format(FOLD_NUM))
 
     model = ModelFC4()
 
@@ -37,20 +34,19 @@ def main():
     model.log_network(path_to_log)
     model.set_optimizer(LEARNING_RATE)
 
-    evaluator = Evaluator()
-
     training_set = ColorCheckerDataset(train=True, folds_num=FOLD_NUM)
-    training_loader = DataLoader(training_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=20)
-    print("Training set size ... : {}".format(len(training_set)))
+    training_loader = DataLoader(training_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=20, drop_last=True)
+    print("\n Training set size ... : {}".format(len(training_set)))
 
     test_set = ColorCheckerDataset(train=False, folds_num=FOLD_NUM)
-    test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=20)
-    print("Test set size ....... : {}".format(len(test_set)))
+    test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=20, drop_last=True)
+    print(" Test set size ....... : {}".format(len(test_set)))
 
     print("\n**************************************************************")
-    print("\t\t Training FC4")
+    print("\t\t\t Training FC4 - Fold {}".format(FOLD_NUM))
     print("**************************************************************\n")
 
+    evaluator = Evaluator()
     best_val_loss, best_metrics = 100.0, evaluator.get_best_metrics()
     train_loss, val_loss = LossTracker(), LossTracker()
 
@@ -88,7 +84,7 @@ def main():
             model.evaluation_mode()
 
             print("\n--------------------------------------------------------------")
-            print("\t\t Validation")
+            print("\t\t\t Validation")
             print("--------------------------------------------------------------\n")
 
             with torch.no_grad():

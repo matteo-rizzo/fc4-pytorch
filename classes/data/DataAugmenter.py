@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import math
 import random
 
@@ -10,6 +8,7 @@ import numpy as np
 class DataAugmenter:
 
     def __init__(self):
+        # Input Size of the fully-convolutional network (SqueezeNet)
         self.__fcn_input_size = (512, 512)
 
         # Rotation angle
@@ -22,8 +21,20 @@ class DataAugmenter:
         self.__color = 0.8
 
     @staticmethod
-    def __rgb_to_bgr(color) -> np.array:
-        return color[::-1]
+    def rgb_to_bgr(x: np.array) -> np.array:
+        return x[::-1]
+
+    @staticmethod
+    def bgr_to_rgb(x: np.array) -> np.array:
+        return x[:, :, ::-1]
+
+    @staticmethod
+    def hwc_to_chw(x: np.array) -> np.array:
+        return x.transpose(2, 0, 1)
+
+    @staticmethod
+    def linear_to_non_linear(x: np.array) -> np.array:
+        return np.power(x, (1.0 / 2.2))
 
     @staticmethod
     def __rotate_image(image: np.array, angle: float) -> np.array:
@@ -140,11 +151,11 @@ class DataAugmenter:
         new_image = np.clip(img, 0, 65535)
 
         new_illuminant = np.zeros_like(illumination)
-        illumination = self.__rgb_to_bgr(illumination)
+        illumination = self.rgb_to_bgr(illumination)
         for i in range(3):
             for j in range(3):
                 new_illuminant[i] += illumination[j] * color_aug[i, j]
-        new_illuminant = self.__rgb_to_bgr(np.clip(new_illuminant, 0.01, 100))
+        new_illuminant = self.rgb_to_bgr(np.clip(new_illuminant, 0.01, 100))
 
         return new_image, new_illuminant
 

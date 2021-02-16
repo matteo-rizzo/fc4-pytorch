@@ -1,8 +1,7 @@
 import torch
+from classes.fc4.squeezenet.SqueezeNetLoader import SqueezeNetLoader
 from torch import nn
 from torch.nn.functional import normalize
-
-from classes.fc4.squeezenet.SqueezeNetLoader import SqueezeNetLoader
 
 """
 FC4: Fully Convolutional Color Constancy with Confidence-weighted Pooling
@@ -26,11 +25,16 @@ class FC4(torch.nn.Module):
             nn.Conv2d(512, 64, kernel_size=6, stride=1, padding=3),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
-            nn.Conv2d(64, 3, kernel_size=1, stride=1),
+            nn.Conv2d(64, 4, kernel_size=1, stride=1),
             nn.ReLU(inplace=True)
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        e = self.backbone(x)
-        o = self.final_convs(e)
-        return normalize(torch.sum(torch.sum(o, 2), 2) + 1e-10, dim=1)
+        # Generate the semi-dense feature maps of shape [batch_size, 4, conv_out_width, conv_out_h]
+        out = self.final_convs(self.backbone(x))
+
+        # Multiply the per-patch color estimates (first 3 dimensions) by the their confidence (last dimension)
+        p = out[:, :-1, :, :] * out[:, -1, :, :].unsqueeze(1)
+
+        # Summation and normalization
+        return normalize(torch.sum(torch.sum(p, 2), 2), dim=1)

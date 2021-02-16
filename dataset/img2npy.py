@@ -9,12 +9,11 @@ Macbeth ColorChecker (MCC) chart, which provides an estimation of illuminant col
 and utilizing MCCs as a visual cue, all images are masked with provided locations of MCC during training and testing
 """
 
-BASE_PATH_TO_DATA = "dataset"
-PATH_TO_NUMPY_DATA = os.path.join(BASE_PATH_TO_DATA, "ndata")
-PATH_TO_NUMPY_LABELS = os.path.join(BASE_PATH_TO_DATA, "nlabel")
-PATH_TO_IMAGES = os.path.join(BASE_PATH_TO_DATA, "images")
-PATH_TO_COORDINATES = os.path.join(BASE_PATH_TO_DATA, "coordinates")
-PATH_TO_CC_METADATA = os.path.join(BASE_PATH_TO_DATA, "color_checker_metadata.txt")
+PATH_TO_NUMPY_DATA = os.path.join("preprocessed", "numpy_data")
+PATH_TO_NUMPY_LABELS = os.path.join("preprocessed", "numpy_labels")
+PATH_TO_IMAGES = os.path.join("images")
+PATH_TO_COORDINATES = os.path.join("coordinates")
+PATH_TO_CC_METADATA = os.path.join("color_checker_metadata.txt")
 
 
 def main():
@@ -22,12 +21,11 @@ def main():
     print("\t Masking MCC charts")
     print("\n=================================================\n")
     print("Paths: \n"
-          "\t - Base path to dataset ... : {} \n"
-          "\t - Numpy dataset .......... : {} \n"
-          "\t - Numpy labels ........ : {} \n"
-          "\t - Images .............. : {} \n"
-          "\t - Coordinates ......... : {} \n"
-          .format(BASE_PATH_TO_DATA, PATH_TO_NUMPY_DATA, PATH_TO_NUMPY_LABELS, PATH_TO_IMAGES, PATH_TO_COORDINATES))
+          "\t - Numpy data generated at .......... : {} \n"
+          "\t - Numpy labels generated at ........ : {} \n"
+          "\t - Images fetched from .............. : {} \n"
+          "\t - Coordinates fetched from ......... : {} \n"
+          .format(PATH_TO_NUMPY_DATA, PATH_TO_NUMPY_LABELS, PATH_TO_IMAGES, PATH_TO_COORDINATES))
 
     os.makedirs(PATH_TO_NUMPY_DATA, exist_ok=True)
     os.makedirs(PATH_TO_NUMPY_LABELS, exist_ok=True)
@@ -41,11 +39,11 @@ def main():
 
         illuminants = [float(l.strip().split(' ')[2]), float(l.strip().split(' ')[3]), float(l.strip().split(' ')[4])]
         np.vstack(illuminants)
-        np.save(os.path.join(PATH_TO_NUMPY_LABELS, file_name + '.npy'), illuminants)
+        np.save(os.path.join(PATH_TO_NUMPY_LABELS, file_name), illuminants)
 
         # BGR image
         img_without_mcc = load_image_without_mcc(file_name, get_mcc_coord(file_name))
-        np.save(os.path.join(PATH_TO_NUMPY_DATA, file_name + '.npy'), img_without_mcc)
+        np.save(os.path.join(PATH_TO_NUMPY_DATA, file_name), img_without_mcc)
 
 
 def load_image_without_mcc(file_name: str, mcc_coord: np.array) -> np.array:
