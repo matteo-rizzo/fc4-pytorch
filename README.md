@@ -8,8 +8,8 @@ The original code for the FC4 method is quite outdated (is based on Python 2 and
 ## FC4: Fully Convolutional Color Constancy with Confidence-weighted Pooling
 
 Original resources:
-* Tensorflow code (requires Python 2): https://github.com/yuanming-hu/fc4
-* Paper: https://www.microsoft.com/en-us/research/publication/fully-convolutional-color-constancy-confidence-weighted-pooling/
+* [Tensorflow code (requires Python 2)](https://github.com/yuanming-hu/fc4)
+* [Paper by Yuanming Hu, Baoyuan Wang and Stephen Lin (2017)](https://www.microsoft.com/en-us/research/publication/fully-convolutional-color-constancy-confidence-weighted-pooling/): 
 
 ## SqueezeNet
 
@@ -18,7 +18,7 @@ This implementation of the FC4 method uses SqueezeNet. The SqueezeNet implementa
 * **SqueezeNet 1.0**. Introduced in ['SqueezeNet: AlexNet-level accuracy with 50x fewer parameters and <0.5MB model size'](https://arxiv.org/abs/1602.07360)
 * **SqueezeNet 1.1** *(has 2.4x less computation and slightly fewer parameters than 1.0, without sacrificing accuracy)*. Introduced in this [repository](https://github.com/forresti/SqueezeNet)
 
-This project has been developed and tested using Python 3.8 and Torch > 1.7. Please install the required packages using `pip3 install -r requirements.txt`
+This project has been developed and tested using Python 3.8 and Torch > 1.7. Please install the required packages using `pip3 install -r requirements.txt`.
 
 ## Dataset
 
