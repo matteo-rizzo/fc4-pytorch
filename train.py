@@ -12,6 +12,7 @@ from classes.training.Evaluator import Evaluator
 from classes.training.LossTracker import LossTracker
 
 EPOCHS = 2000
+BATCH_SIZE = 16
 LEARNING_RATE = 0.0003
 FOLD_NUM = 0
 
@@ -39,14 +40,16 @@ def main():
     evaluator = Evaluator()
 
     training_set = ColorCheckerDataset(train=True, folds_num=FOLD_NUM)
-    training_loader = DataLoader(training_set, batch_size=1, shuffle=True, num_workers=20)
+    training_loader = DataLoader(training_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=20)
     print("Training set size ... : {}".format(len(training_set)))
 
     test_set = ColorCheckerDataset(train=False, folds_num=FOLD_NUM)
-    test_loader = DataLoader(test_set, batch_size=1, shuffle=True, num_workers=20)
+    test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=20)
     print("Test set size ....... : {}".format(len(test_set)))
 
-    print("\n Training starts... \n")
+    print("\n**************************************************************")
+    print("\t\t Training FC4")
+    print("**************************************************************\n")
 
     best_val_loss, best_metrics = 100.0, evaluator.get_best_metrics()
     train_loss, val_loss = LossTracker(), LossTracker()
@@ -69,7 +72,7 @@ def main():
             train_loss.update(loss)
 
             if i % 5 == 0:
-                print("[ Epoch: {}/{} - Item: {} ] | [ Train loss: {:.4f} ]"
+                print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} ]"
                       .format(epoch, EPOCHS, i, loss))
 
         train_time = time.time() - start
@@ -99,7 +102,7 @@ def main():
                     evaluator.add_error(loss)
 
                     if i % 5 == 0:
-                        print("[ Epoch: {}/{} - Item: {}] | Val loss: {:.4f} ]"
+                        print("[ Epoch: {}/{} - Batch: {}] | Val loss: {:.4f} ]"
                               .format(epoch, EPOCHS, i, loss))
 
             print("\n--------------------------------------------------------------\n")
