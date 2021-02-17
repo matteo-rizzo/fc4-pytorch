@@ -42,7 +42,7 @@ class ModelFC4:
     def load(self, path_to_pretrained: str):
         self.__network.load_state_dict(torch.load(path_to_pretrained, map_location=self.__device))
 
-    def set_optimizer(self, learning_rate: float, optimizer_type: str = "rmsprop"):
+    def set_optimizer(self, learning_rate: float, optimizer_type: str = "adam"):
         optimizers_map = {"adam": torch.optim.Adam, "rmsprop": torch.optim.RMSprop}
         self.__optimizer = optimizers_map[optimizer_type](self.__network.parameters(), lr=learning_rate)
 

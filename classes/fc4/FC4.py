@@ -34,7 +34,9 @@ class FC4(torch.nn.Module):
         out = self.final_convs(self.backbone(x))
 
         # Multiply the per-patch color estimates (first 3 dimensions) by the their confidence (last dimension)
-        p = out[:, :-1, :, :] * out[:, -1, :, :].unsqueeze(1)
+        rgb = normalize(out[:, :3, :, :], dim=1)
+        confidence = out[:, 3:4, :, :]
+        p = rgb * confidence
 
         # Summation and normalization
         return normalize(torch.sum(torch.sum(p, 2), 2), dim=1)
