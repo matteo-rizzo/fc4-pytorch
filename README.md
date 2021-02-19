@@ -1,5 +1,5 @@
 # pytorch-fc4
-A PyTorch implementation of FC4: Fully Convolutional Color Constancy with Confidence-weighted Pooling
+A PyTorch implementation of "FC4: Fully Convolutional Color Constancy with Confidence-weighted Pooling"
 
 The original code for the FC4 method is quite outdated (is based on Python 2 and an old version of Tensorflow). This an attempt of providing a clean and modern re-implementation of that method using the PyTorch library.
 
