@@ -2,6 +2,11 @@ import os
 
 import cv2
 import numpy as np
+import torch
+from PIL import Image
+from tqdm import tqdm
+
+from auxiliary.utils import normalize, linear_to_nonlinear, bgr_to_rgb, correct
 
 """
 All images in the Color Checker dataset are linear images in the RAW format of the acquisition device, each with a
@@ -11,6 +16,8 @@ and utilizing MCCs as a visual cue, all images are masked with provided location
 
 PATH_TO_NUMPY_DATA = os.path.join("preprocessed", "numpy_data")
 PATH_TO_NUMPY_LABELS = os.path.join("preprocessed", "numpy_labels")
+PATH_TO_LINEAR_IMAGES = os.path.join("preprocessed", "linear_images")
+PATH_TO_GT_CORRECTED = os.path.join("preprocessed", "gt_corrected")
 PATH_TO_IMAGES = os.path.join("images")
 PATH_TO_COORDINATES = os.path.join("coordinates")
 PATH_TO_CC_METADATA = os.path.join("color_checker_metadata.txt")
@@ -29,21 +36,26 @@ def main():
 
     os.makedirs(PATH_TO_NUMPY_DATA, exist_ok=True)
     os.makedirs(PATH_TO_NUMPY_LABELS, exist_ok=True)
+    os.makedirs(PATH_TO_LINEAR_IMAGES, exist_ok=True)
+    os.makedirs(PATH_TO_GT_CORRECTED, exist_ok=True)
 
     print("Processing images at {} \n".format(PATH_TO_CC_METADATA))
 
     # Generate numpy dataset
-    for l in open(PATH_TO_CC_METADATA, 'r').readlines():
-        file_name = l.strip().split(' ')[1]
-        print(file_name)
+    for img_metadata in tqdm(open(PATH_TO_CC_METADATA, 'r').readlines(), desc="Preprocessing images"):
+        _, file_name, r, g, b = img_metadata.strip().split(' ')
 
-        illuminants = [float(l.strip().split(' ')[2]), float(l.strip().split(' ')[3]), float(l.strip().split(' ')[4])]
-        np.vstack(illuminants)
-        np.save(os.path.join(PATH_TO_NUMPY_LABELS, file_name), illuminants)
+        illuminant = [float(r), float(g), float(b)]
+        np.save(os.path.join(PATH_TO_NUMPY_LABELS, file_name), illuminant)
 
-        # BGR image
         img_without_mcc = load_image_without_mcc(file_name, get_mcc_coord(file_name))
         np.save(os.path.join(PATH_TO_NUMPY_DATA, file_name), img_without_mcc)
+
+        vis_img = Image.fromarray((linear_to_nonlinear(bgr_to_rgb(normalize(img_without_mcc))) * 255).astype(np.uint8))
+        vis_img.save(os.path.join(PATH_TO_LINEAR_IMAGES, file_name))
+
+        gt_corrected = correct(vis_img, torch.from_numpy(np.array([illuminant])))
+        gt_corrected.save(os.path.join(PATH_TO_GT_CORRECTED, file_name))
 
 
 def load_image_without_mcc(file_name: str, mcc_coord: np.array) -> np.array:

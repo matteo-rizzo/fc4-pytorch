@@ -1,5 +1,6 @@
 import math
 import os
+from typing import Union
 
 import torch
 from torch.nn.functional import normalize
@@ -15,8 +16,11 @@ class ModelFC4:
         self.__optimizer = None
         self.__network = FC4().to(self.__device)
 
-    def predict(self, img: torch.Tensor) -> torch.Tensor:
-        return self.__network(img)
+    def predict(self, img: torch.Tensor, return_steps: bool = False) -> Union[torch.Tensor, tuple]:
+        pred, rgb, confidence = self.__network(img)
+        if return_steps:
+            return pred, rgb, confidence
+        return pred
 
     def compute_loss(self, img: torch.Tensor, label: torch.Tensor) -> float:
         pred = self.predict(img)

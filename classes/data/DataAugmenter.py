@@ -4,6 +4,8 @@ import random
 import cv2
 import numpy as np
 
+from auxiliary.utils import rgb_to_bgr
+
 
 class DataAugmenter:
 
@@ -19,22 +21,6 @@ class DataAugmenter:
 
         # Color rescaling
         self.__color = 0.8
-
-    @staticmethod
-    def rgb_to_bgr(x: np.array) -> np.array:
-        return x[::-1]
-
-    @staticmethod
-    def bgr_to_rgb(x: np.array) -> np.array:
-        return x[:, :, ::-1]
-
-    @staticmethod
-    def hwc_to_chw(x: np.array) -> np.array:
-        return x.transpose(2, 0, 1)
-
-    @staticmethod
-    def linear_to_non_linear(x: np.array) -> np.array:
-        return np.power(x, (1.0 / 2.2))
 
     @staticmethod
     def __rotate_image(image: np.array, angle: float) -> np.array:
@@ -151,11 +137,11 @@ class DataAugmenter:
         new_image = np.clip(img, 0, 65535)
 
         new_illuminant = np.zeros_like(illumination)
-        illumination = self.rgb_to_bgr(illumination)
+        illumination = rgb_to_bgr(illumination)
         for i in range(3):
             for j in range(3):
                 new_illuminant[i] += illumination[j] * color_aug[i, j]
-        new_illuminant = self.rgb_to_bgr(np.clip(new_illuminant, 0.01, 100))
+        new_illuminant = rgb_to_bgr(np.clip(new_illuminant, 0.01, 100))
 
         return new_image, new_illuminant
 

@@ -5,6 +5,7 @@ import scipy.io
 import torch
 import torch.utils.data as data
 
+from auxiliary.utils import normalize, bgr_to_rgb, linear_to_nonlinear, hwc_to_chw
 from classes.data.DataAugmenter import DataAugmenter
 
 
@@ -37,8 +38,7 @@ class ColorCheckerDataset(data.Dataset):
         else:
             img = self.__da.crop(img)
 
-        img = np.clip(img, 0.0, 65535.0) * (1.0 / 65535)
-        img = self.__da.hwc_to_chw(self.__da.linear_to_non_linear(self.__da.bgr_to_rgb(img)))
+        img = hwc_to_chw(linear_to_nonlinear(bgr_to_rgb(normalize(img))))
 
         img = torch.from_numpy(img.copy())
         illuminant = torch.from_numpy(illuminant.copy())

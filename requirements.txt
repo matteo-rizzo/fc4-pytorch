@@ -1,6 +1,8 @@
 opencv-python
-scikit-image
 scipy
 numpy
 torch
 pandas
+torchvision
+Pillow
+matplotlib

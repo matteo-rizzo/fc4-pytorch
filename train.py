@@ -2,13 +2,14 @@ import os
 import time
 
 import torch
+from torch.utils.data import DataLoader
+
 from auxiliary.settings import DEVICE
 from auxiliary.utils import print_metrics, log_metrics
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.fc4.ModelFC4 import ModelFC4
 from classes.training.Evaluator import Evaluator
 from classes.training.LossTracker import LossTracker
-from torch.utils.data import DataLoader
 
 EPOCHS = 2000
 BATCH_SIZE = 1
@@ -68,8 +69,7 @@ def main():
             train_loss.update(loss)
 
             if i % 5 == 0:
-                print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} ]"
-                      .format(epoch, EPOCHS, i, loss))
+                print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} ]".format(epoch, EPOCHS, i, loss))
 
         train_time = time.time() - start
 
@@ -98,8 +98,7 @@ def main():
                     evaluator.add_error(loss)
 
                     if i % 5 == 0:
-                        print("[ Epoch: {}/{} - Batch: {}] | Val loss: {:.4f} ]"
-                              .format(epoch, EPOCHS, i, loss))
+                        print("[ Epoch: {}/{} - Batch: {}] | Val loss: {:.4f} ]".format(epoch, EPOCHS, i, loss))
 
             print("\n--------------------------------------------------------------\n")
 
