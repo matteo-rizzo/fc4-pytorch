@@ -9,7 +9,7 @@ The original code for the FC4 method is quite outdated (is based on Python 2 and
 
 Original resources:
 * [Tensorflow code (requires Python 2)](https://github.com/yuanming-hu/fc4)
-* [Paper by Yuanming Hu, Baoyuan Wang and Stephen Lin (2017)](https://www.microsoft.com/en-us/research/publication/fully-convolutional-color-constancy-confidence-weighted-pooling/): 
+* [Paper by Yuanming Hu, Baoyuan Wang and Stephen Lin (2017)](https://www.microsoft.com/en-us/research/publication/fully-convolutional-color-constancy-confidence-weighted-pooling/)
 
 ## SqueezeNet
 
