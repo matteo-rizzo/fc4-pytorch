@@ -22,21 +22,34 @@ This project has been developed and tested using Python 3.8 and Torch > 1.7. Ple
 
 ## Dataset
 
-This implementation of FC4 has been tested against the [Shi's Re-processing of Gehler's Raw Color Checker Dataset](https://www2.cs.sfu.ca/~colour/data/shi_gehler/). After downloading the data, please extract it and move the `images` and `coordinates` folders and the `folds.mat` file to the `dataset` folder. 
+This implementation of FC4 has been tested against
+the [Shi's Re-processing of Gehler's Raw Color Checker Dataset](https://www2.cs.sfu.ca/~colour/data/shi_gehler/). After
+downloading the data, please extract it and move the `images` and `coordinates` folders and the `folds.mat` file to
+the `dataset` folder.
 
-To preprocess the dataset, run the following commands: 
+To preprocess the dataset, run the following commands:
 
 ```bash
 cd dataset
 python3 img2npy.py
 ```
 
-This will mask the ground truth in the images and save the preprocessed items in `.npy` format into a new folder called `preprocessed`.
+This will mask the ground truth in the images and save the preprocessed items in `.npy` format into a new folder
+called `preprocessed`.
+
+Pretrained models on the 3 benchmark folds of this dataset are available at `trained_models`.
 
 ## Training
 
-To train the FC4 model, run `python3 train.py`. The training procedure can be configured by editing the value of the global variables at the beginning of the `train.py` file.
+To train the FC4 model, run `python3 train.py`. The training procedure can be configured by editing the value of the
+global variables at the beginning of the `train.py` file.
 
 ## Test
 
-To test the FC4 model, run `python3 test.py`. The training procedure can be configured by editing the value of the global variables at the beginning of the `test.py` file.
+To test the FC4 model, run `python3 test.py`. The test procedure can be configured by editing the value of the global
+variables at the beginning of the `test.py` file.
+
+## Visualize confidence
+
+To visualize the confidence weights learned by the FC4 model, run `python3 visualize.py`. The procedure can be
+configured by editing the value of the global variables at the beginning of the `visualize.py` file.
