@@ -4,8 +4,9 @@ from typing import Union
 import numpy as np
 import pandas as pd
 import torch
-import torchvision.transforms.functional as TF
+import torchvision.transforms.functional as F
 from PIL.Image import Image
+from torch.nn.functional import interpolate
 
 from auxiliary.settings import DEVICE
 
@@ -42,7 +43,7 @@ def correct(img: Image, illuminant: torch.Tensor) -> Image:
     @param illuminant: a linear illuminant
     @return: a non-linear color-corrected version of the input image
     """
-    img = TF.to_tensor(img)
+    img = F.to_tensor(img)
 
     # Correct the image
     correction = illuminant.unsqueeze(2).unsqueeze(3) * torch.sqrt(torch.Tensor([3])).to(DEVICE)
@@ -53,7 +54,7 @@ def correct(img: Image, illuminant: torch.Tensor) -> Image:
     max_img = max_img.unsqueeze(1).unsqueeze(1).unsqueeze(1)
     normalized_img = torch.div(corrected_img, max_img)
 
-    return TF.to_pil_image(linear_to_nonlinear(normalized_img).squeeze(), mode="RGB")
+    return F.to_pil_image(linear_to_nonlinear(normalized_img).squeeze(), mode="RGB")
 
 
 def linear_to_nonlinear(img: Union[np.array, Image, torch.Tensor]) -> Union[np.array, Image, torch.Tensor]:
@@ -61,7 +62,7 @@ def linear_to_nonlinear(img: Union[np.array, Image, torch.Tensor]) -> Union[np.a
         return np.power(img, (1.0 / 2.2))
     if isinstance(img, torch.Tensor):
         return torch.pow(img, 1.0 / 2.2)
-    return TF.to_pil_image(torch.pow(TF.to_tensor(img), 1.0 / 2.2).squeeze(), mode="RGB")
+    return F.to_pil_image(torch.pow(F.to_tensor(img), 1.0 / 2.2).squeeze(), mode="RGB")
 
 
 def normalize(img: np.array) -> np.array:
@@ -77,4 +78,17 @@ def bgr_to_rgb(x: np.array) -> np.array:
 
 
 def hwc_to_chw(x: np.array) -> np.array:
+    """ Converts an image from height x width x channels to channels x height x width """
     return x.transpose(2, 0, 1)
+
+
+def scale(x: torch.Tensor) -> torch.Tensor:
+    """ Scales all values of a tensor between 0 and 1 """
+    x -= x.min()
+    x /= x.max()
+    return x
+
+
+def rescale(x: torch.Tensor, size: tuple) -> torch.Tensor:
+    """ Rescale tensor to image size for better visualization """
+    return interpolate(x, size, mode='bilinear')

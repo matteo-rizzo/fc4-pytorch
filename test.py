@@ -13,11 +13,11 @@ def main():
     model = ModelFC4()
 
     for num_fold in range(3):
-        test_set = ColorCheckerDataset(train=False, folds_num=i)
+        test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
         dataloader = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
-        print('\n Length of fold {}: {} \n'.format(i, len(test_set)))
+        print('\n Length of fold {}: {} \n'.format(num_fold, len(test_set)))
 
-        model.load(path_to_pretrained=os.path.join("trained_models", "fold{}.pth".format(num_fold)))
+        model.load(os.path.join("trained_models", "fc4_cwp", "fold_{}".format(num_fold), "model.pth"))
         model.evaluation_mode()
 
         with torch.no_grad():

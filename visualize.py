@@ -3,10 +3,11 @@ import time
 
 import matplotlib.pyplot as plt
 import torch.utils.data
+import torchvision.transforms.functional as F
 from torchvision.transforms import transforms
 
 from auxiliary.settings import DEVICE
-from auxiliary.utils import correct
+from auxiliary.utils import correct, rescale, scale
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.fc4.ModelFC4 import ModelFC4
 from classes.training.Evaluator import Evaluator
@@ -26,8 +27,7 @@ def main():
         dataloader = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
         print('\n Length of fold {}: {} \n'.format(num_fold, len(test_set)))
 
-        # model.load(path_to_pretrained=os.path.join("trained_models", "fold{}.pth".format(num_fold)))
-        model.load(path_to_pretrained=os.path.join("trained_models", "fc4_cwp", "model.pth"))
+        model.load(os.path.join("trained_models", "fc4_cwp", "fold_{}".format(num_fold), "model.pth"))
         model.evaluation_mode()
 
         with torch.no_grad():
@@ -44,8 +44,17 @@ def main():
                 print('\t - Input: {} - Batch: {} | Loss: {:f}'.format(file_name, i, loss.item()))
 
                 original = transforms.ToPILImage()(img.squeeze()).convert("RGB")
-                gt_corrected = correct(original, label)
-                est_corrected = correct(original, pred)
+                gt_corrected, est_corrected = correct(original, label), correct(original, pred)
+
+                size = original.size[::-1]
+
+                scaled_rgb = rescale(rgb, size).squeeze(0).permute(1, 2, 0)
+                scaled_confidence = rescale(confidence, size).squeeze(0).permute(1, 2, 0)
+
+                weighted_est = scale(rgb * confidence)
+                scaled_weighted_est = rescale(weighted_est, size).squeeze().permute(1, 2, 0)
+
+                masked_original = scale(F.to_tensor(original).permute(1, 2, 0) * scaled_confidence)
 
                 fig, axs = plt.subplots(2, 3)
 
@@ -53,27 +62,24 @@ def main():
                 axs[0, 0].set_title("Original")
                 axs[0, 0].axis("off")
 
-                axs[0, 1].imshow(confidence.squeeze())
-                axs[0, 1].set_title("Confidence")
+                axs[0, 1].imshow(masked_original, cmap="gray")
+                axs[0, 1].set_title("Confidence Mask")
                 axs[0, 1].axis("off")
 
-                axs[0, 2].imshow(rgb.squeeze().permute(1, 2, 0))
-                axs[0, 2].set_title("Estimate")
+                axs[0, 2].imshow(est_corrected)
+                axs[0, 2].set_title("Correction")
                 axs[0, 2].axis("off")
 
-                p = (rgb * confidence).squeeze()
-                p -= p.min()
-                p /= p.max()
-                axs[1, 0].imshow(p.permute(1, 2, 0))
-                axs[1, 0].set_title("Weighted Estimate")
+                axs[1, 0].imshow(scaled_rgb)
+                axs[1, 0].set_title("Estimate")
                 axs[1, 0].axis("off")
 
-                axs[1, 1].imshow(est_corrected)
-                axs[1, 1].set_title("Prediction")
+                axs[1, 1].imshow(scaled_confidence, cmap="gray")
+                axs[1, 1].set_title("Confidence")
                 axs[1, 1].axis("off")
 
-                axs[1, 2].imshow(gt_corrected)
-                axs[1, 2].set_title("Ground Truth")
+                axs[1, 2].imshow(scaled_weighted_est)
+                axs[1, 2].set_title("Weighted Estimate")
                 axs[1, 2].axis("off")
 
                 fig.tight_layout(pad=0.25)

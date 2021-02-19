@@ -17,7 +17,7 @@ LEARNING_RATE = 0.0003
 FOLD_NUM = 0
 
 RELOAD_CHECKPOINT = False
-PATH_TO_PTH_CHECKPOINT = os.path.join("trained_models", "fold{}.pth".format(FOLD_NUM))
+PATH_TO_PTH_CHECKPOINT = os.path.join("trained_models", "fold_{}".format(FOLD_NUM), "model.pth")
 
 
 def main():
