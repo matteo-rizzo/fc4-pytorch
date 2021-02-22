@@ -57,7 +57,7 @@ class ModelFC4:
         weighted_est = rescale(scale(rgb * c), size).squeeze().permute(1, 2, 0)
         rgb = rescale(rgb, size).squeeze(0).permute(1, 2, 0)
         c = rescale(c, size).squeeze(0).permute(1, 2, 0)
-        masked_original = scale(F.to_tensor(original).permute(1, 2, 0) * c)
+        masked_original = scale(F.to_tensor(original).to(DEVICE).permute(1, 2, 0) * c)
 
         plots = [(original, "original"), (masked_original, "masked_original"), (est_corrected, "correction"),
                  (rgb, "per_patch_estimate"), (c, "confidence"), (weighted_est, "weighted_estimate")]
@@ -70,14 +70,8 @@ class ModelFC4:
                 axs[i, j].set_title(text)
                 axs[i, j].axis("off")
 
-                plt.figure()
-                plt.axis("off")
-                plt.imshow(plot)
-                plt.savefig("{}_{}.png".format(path, text), bbox_inches='tight', dpi=200)
-                plt.clf()
-
-        stages.tight_layout(pad=0.25)
-        stages.savefig(os.path.join(path + "_stages.png"), bbox_inches='tight', dpi=200)
+        stages.suptitle("EPOCH {}".format(path.split(os.sep)[-1].split("_")[-1].split(".")[0]))
+        stages.savefig(os.path.join(path), bbox_inches='tight', dpi=200)
         plt.clf()
 
     def optimize(self, pred: torch.Tensor, label: torch.Tensor) -> float:

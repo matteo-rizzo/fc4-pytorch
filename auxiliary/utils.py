@@ -43,7 +43,7 @@ def correct(img: Image, illuminant: torch.Tensor) -> Image:
     @param illuminant: a linear illuminant
     @return: a non-linear color-corrected version of the input image
     """
-    img = F.to_tensor(img)
+    img = F.to_tensor(img).to(DEVICE)
 
     # Correct the image
     correction = illuminant.unsqueeze(2).unsqueeze(3) * torch.sqrt(torch.Tensor([3])).to(DEVICE)

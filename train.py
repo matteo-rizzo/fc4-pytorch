@@ -76,7 +76,7 @@ def main():
             img, label, file_name = data
             img, label = img.to(DEVICE), label.to(DEVICE)
 
-            path_to_epoch_vis = os.path.join(path_to_train_vis, "epoch{}".format(epoch))
+            path_to_epoch_vis = os.path.join(path_to_train_vis, "epoch_{}.png".format(epoch))
             pred = model.predict(img, vis_conf=file_name[0] == TRAIN_VIS_IMG, path_to_vis=path_to_epoch_vis)
 
             loss = model.optimize(pred, label)
@@ -106,7 +106,7 @@ def main():
                     img, label, file_name = data
                     img, label = img.to(DEVICE), label.to(DEVICE)
 
-                    path_to_epoch_vis = os.path.join(path_to_test_vis, "epoch{}".format(epoch))
+                    path_to_epoch_vis = os.path.join(path_to_test_vis, "epoch_{}.png".format(epoch))
                     o = model.predict(img, vis_conf=file_name[0] == TEST_VIS_IMG, path_to_vis=path_to_epoch_vis)
 
                     loss = model.get_angular_loss(o, label).item()
