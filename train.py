@@ -51,7 +51,7 @@ def main():
         os.makedirs(path_to_train_vis)
 
     path_to_test_vis = os.path.join(path_to_log, "test_vis_{}".format(TEST_VIS_IMG))
-    if TRAIN_VIS_IMG:
+    if TEST_VIS_IMG:
         print("Test vis for monitored image {} will be saved at {}\n".format(TEST_VIS_IMG, path_to_test_vis))
         os.makedirs(path_to_test_vis)
 
