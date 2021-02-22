@@ -9,8 +9,8 @@ from torch.nn.functional import normalize
 from torchvision.transforms import transforms
 
 from auxiliary.settings import DEVICE, USE_CONFIDENCE_WEIGHTED_POOLING
+from auxiliary.utils import correct, rescale, scale
 from classes.fc4.FC4 import FC4
-from utils import correct, rescale, scale
 
 
 class ModelFC4:
@@ -38,10 +38,10 @@ class ModelFC4:
         if USE_CONFIDENCE_WEIGHTED_POOLING:
             pred, rgb, confidence = self.__network(img)
             if vis_conf:
-                self.__vis_confidence(img.clone().detach(),
-                                      pred.clone().detach(),
-                                      rgb.clone().detach(),
-                                      confidence.clone().detach(),
+                self.__vis_confidence(img.clone().detach().to(DEVICE),
+                                      pred.clone().detach().to(DEVICE),
+                                      rgb.clone().detach().to(DEVICE),
+                                      confidence.clone().detach().to(DEVICE),
                                       path_to_vis)
             if return_steps:
                 return pred, rgb, confidence
