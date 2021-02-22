@@ -13,7 +13,7 @@ from classes.fc4.ModelFC4 import ModelFC4
 from classes.training.Evaluator import Evaluator
 
 NUM_SAMPLES = -1
-NUM_FOLDS = 1
+NUM_FOLDS = 3
 PATH_TO_SAVED = os.path.join("results", "fc4_cwp_vis_{}".format(time.time()))
 
 
@@ -75,7 +75,7 @@ def main():
                 axs[0, 2].axis("off")
 
                 axs[1, 0].imshow(scaled_rgb)
-                axs[1, 0].set_title("Estimate")
+                axs[1, 0].set_title("Per-patch Estimate")
                 axs[1, 0].axis("off")
 
                 axs[1, 1].imshow(scaled_confidence, cmap="gray")
@@ -88,13 +88,15 @@ def main():
 
                 fig.tight_layout(pad=0.25)
 
-                path_to_save = os.path.join(PATH_TO_SAVED, "fold_{}".format(num_fold), file_name)
+                path_to_save = os.path.join(PATH_TO_SAVED, "fold_{}".format(num_fold), file_name.split(".")[0])
                 os.makedirs(path_to_save)
 
                 fig.savefig(os.path.join(path_to_save, "stages.png"), bbox_inches='tight', dpi=200)
                 original.save(os.path.join(path_to_save, "original.png"))
                 est_corrected.save(os.path.join(path_to_save, "est_corrected.png"))
                 gt_corrected.save(os.path.join(path_to_save, "gt_corrected.png"))
+
+                plt.clf()
 
     metrics = evaluator.compute_metrics()
     print("\n Mean ............ : {}".format(metrics["mean"]))

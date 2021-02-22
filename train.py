@@ -15,6 +15,8 @@ EPOCHS = 2000
 BATCH_SIZE = 1
 LEARNING_RATE = 0.0003
 FOLD_NUM = 0
+TRAIN_VIS_IMG = "8D5U5549.png"
+TEST_VIS_IMG = "IMG_0753.png"
 
 RELOAD_CHECKPOINT = False
 PATH_TO_PTH_CHECKPOINT = os.path.join("trained_models", "fold_{}".format(FOLD_NUM), "model.pth")
@@ -41,7 +43,17 @@ def main():
 
     test_set = ColorCheckerDataset(train=False, folds_num=FOLD_NUM)
     test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=20, drop_last=True)
-    print(" Test set size ....... : {}".format(len(test_set)))
+    print(" Test set size ....... : {}\n".format(len(test_set)))
+
+    path_to_train_vis = os.path.join(path_to_log, "train_vis_{}".format(TRAIN_VIS_IMG))
+    if TRAIN_VIS_IMG:
+        print("Training vis for monitored image {} will be saved at {}".format(TRAIN_VIS_IMG, path_to_train_vis))
+        os.makedirs(path_to_train_vis)
+
+    path_to_test_vis = os.path.join(path_to_log, "test_vis_{}".format(TEST_VIS_IMG))
+    if TRAIN_VIS_IMG:
+        print("Test vis for monitored image {} will be saved at {}\n".format(TEST_VIS_IMG, path_to_test_vis))
+        os.makedirs(path_to_test_vis)
 
     print("\n**************************************************************")
     print("\t\t\t Training FC4 - Fold {}".format(FOLD_NUM))
@@ -63,9 +75,11 @@ def main():
             model.reset_gradient()
             img, label, file_name = data
             img, label = img.to(DEVICE), label.to(DEVICE)
-            loss = model.compute_loss(img, label)
-            model.optimize()
 
+            path_to_epoch_vis = os.path.join(path_to_train_vis, "epoch{}".format(epoch))
+            pred = model.predict(img, vis_conf=file_name[0] == TRAIN_VIS_IMG, path_to_vis=path_to_epoch_vis)
+
+            loss = model.optimize(pred, label)
             train_loss.update(loss)
 
             if i % 5 == 0:
@@ -92,7 +106,9 @@ def main():
                     img, label, file_name = data
                     img, label = img.to(DEVICE), label.to(DEVICE)
 
-                    o = model.predict(img)
+                    path_to_epoch_vis = os.path.join(path_to_test_vis, "epoch{}".format(epoch))
+                    o = model.predict(img, vis_conf=file_name[0] == TEST_VIS_IMG, path_to_vis=path_to_epoch_vis)
+
                     loss = model.get_angular_loss(o, label).item()
                     val_loss.update(loss)
                     evaluator.add_error(loss)
