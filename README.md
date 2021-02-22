@@ -71,4 +71,4 @@ configured by editing the value of the global variables at the beginning of the 
 
 This is the type of visualization produced by the script:
 
-![stages](stages.png)
+![vis_example](vis_example.png)

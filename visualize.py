@@ -91,7 +91,7 @@ def main():
                 path_to_save = os.path.join(PATH_TO_SAVED, "fold_{}".format(num_fold), file_name)
                 os.makedirs(path_to_save)
 
-                fig.savefig(os.path.join(path_to_save, "stages.png"), bbox_inches='tight', dpi=200)
+                fig.savefig(os.path.join(path_to_save, "vis_example.png"), bbox_inches='tight', dpi=200)
                 original.save(os.path.join(path_to_save, "original.png"))
                 est_corrected.save(os.path.join(path_to_save, "est_corrected.png"))
                 gt_corrected.save(os.path.join(path_to_save, "gt_corrected.png"))
