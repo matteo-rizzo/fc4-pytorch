@@ -66,6 +66,8 @@ class ModelFC4:
         for i in range(2):
             for j in range(3):
                 plot, text = plots[i * 3 + j]
+                if isinstance(plot, torch.Tensor):
+                    plot = plot.cpu()
                 axs[i, j].imshow(plot, cmap="gray" if "confidence" in text else None)
                 axs[i, j].set_title(text)
                 axs[i, j].axis("off")
