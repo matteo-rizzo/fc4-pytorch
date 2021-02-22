@@ -1,8 +1,11 @@
+from typing import Union
+
 import torch
 from torch import nn
 from torch.nn.functional import normalize
 
 from classes.fc4.squeezenet.SqueezeNetLoader import SqueezeNetLoader
+from settings import USE_CONFIDENCE_WEIGHTED_POOLING
 
 """
 FC4: Fully Convolutional Color Constancy with Confidence-weighted Pooling
@@ -26,21 +29,33 @@ class FC4(torch.nn.Module):
             nn.Conv2d(512, 64, kernel_size=6, stride=1, padding=3),
             nn.ReLU(inplace=True),
             nn.Dropout(p=0.5),
-            nn.Conv2d(64, 4, kernel_size=1, stride=1),
+            nn.Conv2d(64, 4 if USE_CONFIDENCE_WEIGHTED_POOLING else 3, kernel_size=1, stride=1),
             nn.ReLU(inplace=True)
         )
 
-    def forward(self, x: torch.Tensor) -> tuple:
-        # Generate the semi-dense feature maps of shape [batch_size, 4, conv_out_width, conv_out_h]
+    def forward(self, x: torch.Tensor) -> Union[tuple, torch.Tensor]:
+        """
+        Estimate an RGB colour for the illuminant of the input image
+        @param x: the image for which the colour of the illuminant has to be estimated
+        @return: the colour estimate as a Tensor. If confidence-weighted pooling is used, the per-path colour estimates
+        and the confidence weights are returned as well (used for visualizations)
+        """
         out = self.final_convs(self.backbone(x))
 
-        # Per-patch color estimates (first 3 dimensions)
-        rgb = normalize(out[:, :3, :, :], dim=1)
+        # Confidence-weighted pooling: "out" is a set of semi-dense feature maps
+        if USE_CONFIDENCE_WEIGHTED_POOLING:
+            # Per-patch color estimates (first 3 dimensions)
+            rgb = normalize(out[:, :3, :, :], dim=1)
 
-        # Confidence (last dimension)
-        confidence = out[:, 3:4, :, :]
+            # Confidence (last dimension)
+            confidence = out[:, 3:4, :, :]
 
-        # Confidence-weighted pooling
-        pred = normalize(torch.sum(torch.sum(rgb * confidence, 2), 2), dim=1)
+            # Confidence-weighted pooling
+            pred = normalize(torch.sum(torch.sum(rgb * confidence, 2), 2), dim=1)
 
-        return pred, rgb, confidence
+            return pred, rgb, confidence
+
+        # Summation pooling
+        pred = normalize(torch.sum(torch.sum(out, 2), 2), dim=1)
+
+        return pred

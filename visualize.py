@@ -12,9 +12,9 @@ from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.fc4.ModelFC4 import ModelFC4
 from classes.training.Evaluator import Evaluator
 
-NUM_SAMPLES = 1
+NUM_SAMPLES = -1
 NUM_FOLDS = 1
-PATH_TO_SAVED = os.path.join("results", "fc4_cwp_{}".format(time.time()))
+PATH_TO_SAVED = os.path.join("results", "fc4_cwp_vis_{}".format(time.time()))
 
 
 def main():
@@ -25,10 +25,14 @@ def main():
     for num_fold in range(NUM_FOLDS):
         test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
         dataloader = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
-        print('\n Length of fold {}: {} \n'.format(num_fold, len(test_set)))
 
-        model.load(os.path.join("trained_models", "fc4_cwp", "fold_{}".format(num_fold), "model.pth"))
+        path_to_pretrained = os.path.join("trained_models", "fc4_cwp", "fold_{}".format(num_fold), "model.pth")
+        model.load(path_to_pretrained)
         model.evaluation_mode()
+
+        print("\n *** Generating visualizations for FOLD {} *** \n".format(num_fold))
+        print(" * Test set size: {}".format(len(test_set)))
+        print(" * Using pretrained model stored at: {} \n".format(path_to_pretrained))
 
         with torch.no_grad():
             for i, data in enumerate(dataloader):

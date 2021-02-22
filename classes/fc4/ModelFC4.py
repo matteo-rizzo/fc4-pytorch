@@ -5,7 +5,7 @@ from typing import Union
 import torch
 from torch.nn.functional import normalize
 
-from auxiliary.settings import DEVICE
+from auxiliary.settings import DEVICE, USE_CONFIDENCE_WEIGHTED_POOLING
 from classes.fc4.FC4 import FC4
 
 
@@ -17,10 +17,20 @@ class ModelFC4:
         self.__network = FC4().to(self.__device)
 
     def predict(self, img: torch.Tensor, return_steps: bool = False) -> Union[torch.Tensor, tuple]:
-        pred, rgb, confidence = self.__network(img)
-        if return_steps:
-            return pred, rgb, confidence
-        return pred
+        """
+        Performs inference on the input image using the FC4 method.
+        @param img: the image for which a colour of the illuminant has to be estimated
+        @param return_steps: whether or not to also return the per-patch estimates and confidence weights. When this
+        flag is set to True, confidence-weighted pooling must be active)
+        @return: the colour estimate as a Tensor. If "return_steps" is set to true, the per-path colour estimates and
+        the confidence weights are also returned (used for visualizations)
+        """
+        if USE_CONFIDENCE_WEIGHTED_POOLING:
+            pred, rgb, confidence = self.__network(img)
+            if return_steps:
+                return pred, rgb, confidence
+            return pred
+        return self.__network(img)
 
     def compute_loss(self, img: torch.Tensor, label: torch.Tensor) -> float:
         pred = self.predict(img)
