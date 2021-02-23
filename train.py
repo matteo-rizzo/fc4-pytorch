@@ -69,6 +69,7 @@ def main():
             pred = model.predict(img)
             loss = model.optimize(pred, label)
             train_loss.update(loss)
+
             if i % 5 == 0:
                 print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} ]".format(epoch, EPOCHS, i, loss))
 
@@ -88,8 +89,8 @@ def main():
             with torch.no_grad():
                 for i, (img, label, file_name) in enumerate(test_loader):
                     img, label = img.to(DEVICE), label.to(DEVICE)
-
                     img_id = file_name[0].split(".")[0]
+
                     if USE_CONFIDENCE_WEIGHTED_POOLING and img_id in TEST_VIS_IMG:
                         pred, rgb, confidence = model.predict(img, return_steps=True)
                         model.vis_confidence({"img": img, "label": label, "pred": pred, "rgb": rgb, "c": confidence},

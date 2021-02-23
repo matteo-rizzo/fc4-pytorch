@@ -20,18 +20,12 @@ class ModelFC4:
         self.__optimizer = None
         self.__network = FC4().to(self.__device)
 
-    def predict(self,
-                img: torch.Tensor,
-                return_steps: bool = False,
-                vis_conf: bool = False,
-                path_to_vis: str = "") -> Union[torch.Tensor, tuple]:
+    def predict(self, img: torch.Tensor, return_steps: bool = False) -> Union[torch.Tensor, tuple]:
         """
         Performs inference on the input image using the FC4 method.
         @param img: the image for which a colour of the illuminant has to be estimated
         @param return_steps: whether or not to also return the per-patch estimates and confidence weights. When this
         flag is set to True, confidence-weighted pooling must be active)
-        @param vis_conf:
-        @param path_to_vis:
         @return: the colour estimate as a Tensor. If "return_steps" is set to true, the per-path colour estimates and
         the confidence weights are also returned (used for visualizations)
         """
@@ -75,6 +69,7 @@ class ModelFC4:
         stages.suptitle("EPOCH {} - ERROR: {:.4f}".format(epoch, loss))
         stages.savefig(os.path.join(path_to_plot), bbox_inches='tight', dpi=200)
         plt.clf()
+        plt.close('all')
 
     def optimize(self, pred: torch.Tensor, label: torch.Tensor) -> float:
         loss = self.get_angular_loss(pred, label)
