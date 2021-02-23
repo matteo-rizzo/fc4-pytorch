@@ -37,19 +37,17 @@ class ModelFC4:
         """
         if USE_CONFIDENCE_WEIGHTED_POOLING:
             pred, rgb, confidence = self.__network(img)
-            if vis_conf:
-                self.__vis_confidence(img.clone().detach().to(DEVICE),
-                                      pred.clone().detach().to(DEVICE),
-                                      rgb.clone().detach().to(DEVICE),
-                                      confidence.clone().detach().to(DEVICE),
-                                      path_to_vis)
             if return_steps:
                 return pred, rgb, confidence
             return pred
         return self.__network(img)
 
-    @staticmethod
-    def __vis_confidence(img: torch.Tensor, pred: torch.Tensor, rgb: torch.Tensor, c: torch.Tensor, path: str):
+    def vis_confidence(self, model_output: dict, path_to_plot: str):
+        model_output = {k: v.clone().detach().to(DEVICE) for k, v in model_output.items()}
+
+        img, label, pred = model_output["img"], model_output["label"], model_output["pred"]
+        rgb, c = model_output["rgb"], model_output["c"]
+
         original = transforms.ToPILImage()(img.squeeze()).convert("RGB")
         est_corrected = correct(original, pred)
 
@@ -72,8 +70,10 @@ class ModelFC4:
                 axs[i, j].set_title(text)
                 axs[i, j].axis("off")
 
-        stages.suptitle("EPOCH {}".format(path.split(os.sep)[-1].split("_")[-1].split(".")[0]))
-        stages.savefig(os.path.join(path), bbox_inches='tight', dpi=200)
+        os.makedirs(os.sep.join(path_to_plot.split(os.sep)[:-1]), exist_ok=True)
+        epoch, loss = path_to_plot.split(os.sep)[-1].split("_")[-1].split(".")[0], self.get_angular_loss(pred, label)
+        stages.suptitle("EPOCH {} - ERROR: {:.4f}".format(epoch, loss))
+        stages.savefig(os.path.join(path_to_plot), bbox_inches='tight', dpi=200)
         plt.clf()
 
     def optimize(self, pred: torch.Tensor, label: torch.Tensor) -> float:
@@ -81,6 +81,12 @@ class ModelFC4:
         loss.backward()
         self.__optimizer.step()
         return loss.item()
+
+    @staticmethod
+    def get_angular_loss(pred: torch.Tensor, label: torch.Tensor, safe_v: float = 0.999999) -> torch.Tensor:
+        dot = torch.clamp(torch.sum(normalize(pred, dim=1) * normalize(label, dim=1), dim=1), -safe_v, safe_v)
+        angle = torch.acos(dot) * (180 / math.pi)
+        return torch.mean(angle)
 
     def print_network(self):
         print(self.__network)
@@ -106,9 +112,3 @@ class ModelFC4:
 
     def reset_gradient(self):
         self.__optimizer.zero_grad()
-
-    @staticmethod
-    def get_angular_loss(pred: torch.Tensor, label: torch.Tensor, safe_v: float = 0.999999) -> torch.Tensor:
-        dot = torch.clamp(torch.sum(normalize(pred, dim=1) * normalize(label, dim=1), dim=1), -safe_v, safe_v)
-        angle = torch.acos(dot) * (180 / math.pi)
-        return torch.mean(angle)

@@ -47,8 +47,7 @@ def main():
         print(" * Using pretrained model stored at: {} \n".format(path_to_pretrained))
 
         with torch.no_grad():
-            for i, data in enumerate(dataloader):
-                img, label, file_name = data
+            for i, (img, label, file_name) in enumerate(dataloader):
                 img, label = img.to(DEVICE), label.to(DEVICE)
                 pred = model.predict(img)
                 loss = model.get_angular_loss(pred, label)

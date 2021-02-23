@@ -35,11 +35,10 @@ def main():
         print(" * Using pretrained model stored at: {} \n".format(path_to_pretrained))
 
         with torch.no_grad():
-            for i, data in enumerate(dataloader):
+            for i, (img, label, file_name) in enumerate(dataloader):
                 if NUM_SAMPLES > -1 and i > NUM_SAMPLES - 1:
                     break
 
-                img, label, file_name = data
                 img, label = img.to(DEVICE), label.to(DEVICE)
                 pred, rgb, confidence = model.predict(img, return_steps=True)
                 loss = model.get_angular_loss(pred, label)

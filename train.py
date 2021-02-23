@@ -4,7 +4,7 @@ import time
 import torch
 from torch.utils.data import DataLoader
 
-from auxiliary.settings import DEVICE
+from auxiliary.settings import DEVICE, USE_CONFIDENCE_WEIGHTED_POOLING
 from auxiliary.utils import print_metrics, log_metrics
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.fc4.ModelFC4 import ModelFC4
@@ -15,8 +15,7 @@ EPOCHS = 2000
 BATCH_SIZE = 1
 LEARNING_RATE = 0.0003
 FOLD_NUM = 0
-TRAIN_VIS_IMG = "8D5U5549.png"
-TEST_VIS_IMG = "IMG_0753.png"
+TEST_VIS_IMG = ["IMG_0753", "IMG_0438", "IMG_0397"]
 
 RELOAD_CHECKPOINT = False
 PATH_TO_PTH_CHECKPOINT = os.path.join("trained_models", "fold_{}".format(FOLD_NUM), "model.pth")
@@ -45,15 +44,10 @@ def main():
     test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=20, drop_last=True)
     print(" Test set size ....... : {}\n".format(len(test_set)))
 
-    path_to_train_vis = os.path.join(path_to_log, "train_vis_{}".format(TRAIN_VIS_IMG))
-    if TRAIN_VIS_IMG:
-        print("Training vis for monitored image {} will be saved at {}".format(TRAIN_VIS_IMG, path_to_train_vis))
-        os.makedirs(path_to_train_vis)
-
-    path_to_test_vis = os.path.join(path_to_log, "test_vis_{}".format(TEST_VIS_IMG))
+    path_to_vis = os.path.join(path_to_log, "test_vis")
     if TEST_VIS_IMG:
-        print("Test vis for monitored image {} will be saved at {}\n".format(TEST_VIS_IMG, path_to_test_vis))
-        os.makedirs(path_to_test_vis)
+        print("Test vis for monitored image {} will be saved at {}\n".format(TEST_VIS_IMG, path_to_vis))
+        os.makedirs(path_to_vis)
 
     print("\n**************************************************************")
     print("\t\t\t Training FC4 - Fold {}".format(FOLD_NUM))
@@ -65,33 +59,23 @@ def main():
 
     for epoch in range(EPOCHS):
 
-        # --- Training ---
-
         model.train_mode()
         train_loss.reset()
         start = time.time()
 
-        for i, data in enumerate(training_loader):
+        for i, (img, label, _) in enumerate(training_loader):
             model.reset_gradient()
-            img, label, file_name = data
             img, label = img.to(DEVICE), label.to(DEVICE)
-
-            path_to_epoch_vis = os.path.join(path_to_train_vis, "epoch_{}.png".format(epoch))
-            pred = model.predict(img, vis_conf=file_name[0] == TRAIN_VIS_IMG, path_to_vis=path_to_epoch_vis)
-
+            pred = model.predict(img)
             loss = model.optimize(pred, label)
             train_loss.update(loss)
-
             if i % 5 == 0:
                 print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} ]".format(epoch, EPOCHS, i, loss))
 
         train_time = time.time() - start
 
-        # --- Validation ---
-
-        start = time.time()
-
         val_loss.reset()
+        start = time.time()
 
         if epoch % 5 == 0:
             evaluator.reset_errors()
@@ -102,14 +86,18 @@ def main():
             print("--------------------------------------------------------------\n")
 
             with torch.no_grad():
-                for i, data in enumerate(test_loader):
-                    img, label, file_name = data
+                for i, (img, label, file_name) in enumerate(test_loader):
                     img, label = img.to(DEVICE), label.to(DEVICE)
 
-                    path_to_epoch_vis = os.path.join(path_to_test_vis, "epoch_{}.png".format(epoch))
-                    o = model.predict(img, vis_conf=file_name[0] == TEST_VIS_IMG, path_to_vis=path_to_epoch_vis)
+                    img_id = file_name[0].split(".")[0]
+                    if USE_CONFIDENCE_WEIGHTED_POOLING and img_id in TEST_VIS_IMG:
+                        pred, rgb, confidence = model.predict(img, return_steps=True)
+                        model.vis_confidence({"img": img, "label": label, "pred": pred, "rgb": rgb, "c": confidence},
+                                             os.path.join(path_to_vis, img_id, "epoch_{}.png".format(epoch)))
+                    else:
+                        pred = model.predict(img)
 
-                    loss = model.get_angular_loss(o, label).item()
+                    loss = model.get_angular_loss(pred, label).item()
                     val_loss.update(loss)
                     evaluator.add_error(loss)
 
