@@ -59,6 +59,11 @@ Pretrained models on the 3 benchmark folds of this dataset are available at `tra
 To train the FC4 model, run `python3 train.py`. The training procedure can be configured by editing the value of the
 global variables at the beginning of the `train.py` file.
 
+A set of images in the training set can be monitored at training time. A confidence plot for these images will be saved
+at each epoch, which can be used to generate GIF visualizations using `vis/make_gif.py`. Here is an example:
+
+![test_400_epochs](vis_example.gif)
+
 ## Test
 
 To test the FC4 model, run `python3 test.py`. The test procedure can be configured by editing the value of the global
