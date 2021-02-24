@@ -4,6 +4,7 @@ import time
 import matplotlib.pyplot as plt
 import torch.utils.data
 import torchvision.transforms.functional as F
+from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 
 from auxiliary.settings import DEVICE
@@ -14,7 +15,7 @@ from classes.training.Evaluator import Evaluator
 
 NUM_SAMPLES = -1
 NUM_FOLDS = 3
-PATH_TO_SAVED = os.path.join("results", "fc4_cwp_vis_{}".format(time.time()))
+PATH_TO_SAVED = os.path.join("results", "cc_training_set_{}".format(time.time()))
 
 
 def main():
@@ -24,7 +25,7 @@ def main():
 
     for num_fold in range(NUM_FOLDS):
         test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
-        dataloader = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
+        dataloader = DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
 
         path_to_pretrained = os.path.join("trained_models", "fc4_cwp", "fold_{}".format(num_fold), "model.pth")
         model.load(path_to_pretrained)
@@ -41,10 +42,10 @@ def main():
 
                 img, label = img.to(DEVICE), label.to(DEVICE)
                 pred, rgb, confidence = model.predict(img, return_steps=True)
-                loss = model.get_angular_loss(pred, label)
-                evaluator.add_error(loss.item())
-                file_name = file_name[0]
-                print('\t - Input: {} - Batch: {} | Loss: {:f}'.format(file_name, i, loss.item()))
+                loss = model.get_angular_loss(pred, label).item()
+                evaluator.add_error(loss)
+                file_name = file_name[0].split(".")[0]
+                print('\t - Input: {} - Batch: {} | Loss: {:f}'.format(file_name, i, loss))
 
                 original = transforms.ToPILImage()(img.squeeze()).convert("RGB")
                 gt_corrected, est_corrected = correct(original, label), correct(original, pred)
@@ -85,9 +86,10 @@ def main():
                 axs[1, 2].set_title("Weighted Estimate")
                 axs[1, 2].axis("off")
 
+                fig.suptitle("Image ID: {} | Error: {:.4f}".format(file_name, loss))
                 fig.tight_layout(pad=0.25)
 
-                path_to_save = os.path.join(PATH_TO_SAVED, "fold_{}".format(num_fold), file_name.split(".")[0])
+                path_to_save = os.path.join(PATH_TO_SAVED, "fold_{}".format(num_fold), file_name)
                 os.makedirs(path_to_save)
 
                 fig.savefig(os.path.join(path_to_save, "stages.png"), bbox_inches='tight', dpi=200)

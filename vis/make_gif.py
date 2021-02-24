@@ -2,7 +2,7 @@ import os
 
 import imageio
 
-PATH_TO_IMAGES = os.path.join("vis", "sample_experiment", "IMG_0438")
+PATH_TO_IMAGES = os.path.join("vis", "gif_frames_2k_epochs", "IMG_0753")
 GIF_NAME = "test_400_epochs"
 
 

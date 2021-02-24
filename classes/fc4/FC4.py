@@ -40,6 +40,7 @@ class FC4(torch.nn.Module):
         @return: the colour estimate as a Tensor. If confidence-weighted pooling is used, the per-path colour estimates
         and the confidence weights are returned as well (used for visualizations)
         """
+
         out = self.final_convs(self.backbone(x))
 
         # Confidence-weighted pooling: "out" is a set of semi-dense feature maps

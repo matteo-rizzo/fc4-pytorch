@@ -22,7 +22,7 @@ class ColorCheckerDataset(data.Dataset):
         self.__path_to_label = os.path.join("dataset", "preprocessed", "numpy_labels")
 
         folds = scipy.io.loadmat(path_to_folds)
-        img_idx = folds['tr_split' if self.__train else 'te_split'][0][folds_num][0]
+        img_idx = folds["tr_split" if self.__train else "te_split"][0][folds_num][0]
 
         metadata = open(path_to_metadata, 'r').readlines()
         self.__fold_data = [metadata[i - 1] for i in img_idx]
