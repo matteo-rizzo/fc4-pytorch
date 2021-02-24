@@ -23,7 +23,7 @@ class DataAugmenter:
         self.__color = 0.8
 
     @staticmethod
-    def __rotate_image(image: np.array, angle: float) -> np.array:
+    def __rotate_image(image: np.ndarray, angle: float) -> np.ndarray:
         """
         Rotates an OpenCV 2 / NumPy image about it's centre by the given angle (in degrees).
         The returned image will be large enough to hold the entire new image, with a black background
@@ -95,7 +95,7 @@ class DataAugmenter:
         return bb_w - 2 * x, bb_h - 2 * y
 
     @staticmethod
-    def __crop_around_center(image: np.array, width: float, height: float) -> np.array:
+    def __crop_around_center(image: np.ndarray, width: float, height: float) -> np.ndarray:
         """ Given a NumPy / OpenCV 2 image, crops it to the given width and height around it's centre point """
 
         image_size = (image.shape[1], image.shape[0])
@@ -109,12 +109,12 @@ class DataAugmenter:
 
         return image[y1:y2, x1:x2]
 
-    def __rotate_and_crop(self, image: np.array, angle: float) -> np.array:
+    def __rotate_and_crop(self, image: np.ndarray, angle: float) -> np.ndarray:
         width, height = image.shape[:2]
         target_width, target_height = self.__largest_rotated_rect(width, height, math.radians(angle))
         return self.__crop_around_center(self.__rotate_image(image, angle), target_width, target_height)
 
-    def augment(self, img: np.array, illumination: np.array) -> tuple:
+    def augment(self, img: np.ndarray, illumination: np.ndarray) -> tuple:
         scale = math.exp(random.random() * math.log(self.__scale[1] / self.__scale[0])) * self.__scale[0]
         s = min(max(int(round(min(img.shape[:2]) * scale)), 10), min(img.shape[:2]))
 
@@ -146,5 +146,5 @@ class DataAugmenter:
         return new_image, new_illuminant
 
     @staticmethod
-    def crop(img: np.array, scale: float = 0.5) -> np.array:
+    def crop(img: np.ndarray, scale: float = 0.5) -> np.ndarray:
         return cv2.resize(img, (0, 0), fx=scale, fy=scale)

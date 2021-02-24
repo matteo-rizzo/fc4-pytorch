@@ -58,7 +58,7 @@ def main():
         gt_corrected.save(os.path.join(PATH_TO_GT_CORRECTED, file_name))
 
 
-def load_image_without_mcc(file_name: str, mcc_coord: np.array) -> np.array:
+def load_image_without_mcc(file_name: str, mcc_coord: np.ndarray) -> np.ndarray:
     raw = load_image(file_name)
 
     # Clip the values between 0 and 1
@@ -74,7 +74,7 @@ def load_image_without_mcc(file_name: str, mcc_coord: np.array) -> np.array:
     return img
 
 
-def load_image(file_name: str) -> np.array:
+def load_image(file_name: str) -> np.ndarray:
     raw = np.array(cv2.imread(os.path.join(PATH_TO_IMAGES, file_name), -1), dtype='float32')
 
     # Handle pictures taken with Canon 5d Mark III
@@ -84,7 +84,7 @@ def load_image(file_name: str) -> np.array:
     return np.maximum(raw - black_point, [0, 0, 0])
 
 
-def get_mcc_coord(file_name: str) -> np.array:
+def get_mcc_coord(file_name: str) -> np.ndarray:
     """ Computes the relative MCC coordinates for the given image """
 
     lines = open(os.path.join(PATH_TO_COORDINATES, file_name.split('.')[0] + "_macbeth.txt"), 'r').readlines()

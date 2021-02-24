@@ -65,19 +65,19 @@ def linear_to_nonlinear(img: Union[np.array, Image, torch.Tensor]) -> Union[np.a
     return F.to_pil_image(torch.pow(F.to_tensor(img), 1.0 / 2.2).squeeze(), mode="RGB")
 
 
-def normalize(img: np.array) -> np.array:
+def normalize(img: np.ndarray) -> np.ndarray:
     return np.clip(img, 0.0, 65535.0) * (1.0 / 65535)
 
 
-def rgb_to_bgr(x: np.array) -> np.array:
+def rgb_to_bgr(x: np.ndarray) -> np.ndarray:
     return x[::-1]
 
 
-def bgr_to_rgb(x: np.array) -> np.array:
+def bgr_to_rgb(x: np.ndarray) -> np.ndarray:
     return x[:, :, ::-1]
 
 
-def hwc_to_chw(x: np.array) -> np.array:
+def hwc_to_chw(x: np.ndarray) -> np.ndarray:
     """ Converts an image from height x width x channels to channels x height x width """
     return x.transpose(2, 0, 1)
 
