@@ -28,6 +28,8 @@ and features:
 This project has been developed and tested using Python 3.8 and Torch > 1.7. Please install the required packages
 using `pip3 install -r requirements.txt`.
 
+## Configuration
+
 The device on which to run the method (either `cpu` or `cuda:x`) and the random seed for reproducibility can be set as
 global variables at `auxiliary/settings.py`.
 
@@ -42,6 +44,8 @@ the [Shi's Re-processing of Gehler's Raw Color Checker Dataset](https://www2.cs.
 downloading the data, please extract it and move the `images` and `coordinates` folders and the `folds.mat` file to
 the `dataset` folder.
 
+### Preprocessing
+
 To preprocess the dataset, run the following commands:
 
 ```bash
@@ -53,6 +57,8 @@ This will mask the ground truth in the images and save the preprocessed items in
 called `preprocessed`. The script also save a linearized version of original and ground-truth-corrected images for
 better visualization.
 
+### Pretrained models
+
 Pretrained models on the 3 benchmark folds of this dataset are available inside `trained_models.zip`. Those under
 `trained_models/fc4_cwp` are meant to be used with the confidence-weighted-pooling activated while those under
 `trained_models/fc4_sum` with the confidence-weighted-pooling not activated. All models come with a log of the training
@@ -63,6 +69,8 @@ metrics and a dump of the network architecture.
 To train the FC4 model, run `python3 train.py`. The training procedure can be configured by editing the value of the
 global variables at the beginning of the `train.py` file.
 
+### Monitoring confidence
+
 A subset of the images in the test set can be monitored at training time. A plot of the confidence for these images will
 be saved at each epoch, which can be used to generate GIF visualizations using `vis/make_gif.py`. Here is an example:
 
@@ -71,12 +79,12 @@ be saved at each epoch, which can be used to generate GIF visualizations using `
 Note that monitoring images has an impact on training time. If you are not interested in monitoring images, just
 set `TEST_VIS_IMG = []` in `train.py`.
 
-## Test
+## Testing
 
 To test the FC4 model, run `python3 test.py`. The test procedure can be configured by editing the value of the global
 variables at the beginning of the `test.py` file.
 
-## Visualize confidence
+## Visualizing confidence
 
 To visualize the confidence weights learned by the FC4 model, run `python3 visualize.py`. The procedure can be
 configured by editing the value of the global variables at the beginning of the `visualize.py` file.
