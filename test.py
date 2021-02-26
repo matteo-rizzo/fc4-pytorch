@@ -38,6 +38,7 @@ def main():
         test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
         dataloader = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
 
+        # Edit this path to point to the trained model to be tested
         path_to_pretrained = os.path.join("trained_models", MODEL_TYPE, "fold_{}".format(num_fold), "model.pth")
         model.load(path_to_pretrained)
         model.evaluation_mode()

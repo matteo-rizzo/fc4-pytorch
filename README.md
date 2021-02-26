@@ -1,9 +1,9 @@
 # pytorch-fc4
 
-A PyTorch implementation of "FC4: Fully Convolutional Color Constancy with Confidence-weighted Pooling"
+A PyTorch implementation of "FC4: Fully Convolutional Color Constancy with Confidence-weighted Pooling".
 
-The original code for the FC4 method is quite outdated (it is based on Python 2 and an old version of Tensorflow). This
-an attempt of providing a clean and modern Python3-based re-implementation of that method using the PyTorch library.
+The original code for the FC4 method is quite outdated (based on Python 2 and an old version of Tensorflow). This an
+attempt to provide a clean and modern Python3-based re-implementation of that method using the PyTorch library.
 
 ## FC4: Fully Convolutional Color Constancy with Confidence-weighted Pooling
 
@@ -50,19 +50,26 @@ python3 img2npy.py
 ```
 
 This will mask the ground truth in the images and save the preprocessed items in `.npy` format into a new folder
-called `preprocessed`.
+called `preprocessed`. The script also save a linearized version of original and ground-truth-corrected images for
+better visualization.
 
-Pretrained models on the 3 benchmark folds of this dataset are available at `trained_models`.
+Pretrained models on the 3 benchmark folds of this dataset are available inside `trained_models.zip`. Those under
+`trained_models/fc4_cwp` are meant to be used with the confidence-weighted-pooling activated while those under
+`trained_models/fc4_sum` with the confidence-weighted-pooling not activated. All models come with a log of the training
+metrics and a dump of the network architecture.
 
 ## Training
 
 To train the FC4 model, run `python3 train.py`. The training procedure can be configured by editing the value of the
 global variables at the beginning of the `train.py` file.
 
-A set of images in the training set can be monitored at training time. A confidence plot for these images will be saved
-at each epoch, which can be used to generate GIF visualizations using `vis/make_gif.py`. Here is an example:
+A subset of the images in the test set can be monitored at training time. A plot of the confidence for these images will
+be saved at each epoch, which can be used to generate GIF visualizations using `vis/make_gif.py`. Here is an example:
 
 ![test_400_epochs](vis_example.gif)
+
+Note that monitoring images has an impact on training time. If you are not interested in monitoring images, just
+set `TEST_VIS_IMG = []` in `train.py`.
 
 ## Test
 

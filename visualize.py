@@ -13,9 +13,14 @@ from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.fc4.ModelFC4 import ModelFC4
 from classes.training.Evaluator import Evaluator
 
+# Set to -1 to process all the samples in the test set of the current fold
 NUM_SAMPLES = -1
+
+# The number of folds to be processed (either 1, 2 or 3)
 NUM_FOLDS = 3
-PATH_TO_SAVED = os.path.join("results", "cc_training_set_{}".format(time.time()))
+
+# Where to save the generated visualizations
+PATH_TO_SAVED = os.path.join("vis", "cc_training_set_{}".format(time.time()))
 
 
 def main():

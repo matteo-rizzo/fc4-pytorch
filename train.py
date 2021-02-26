@@ -14,7 +14,11 @@ from classes.training.LossTracker import LossTracker
 EPOCHS = 2000
 BATCH_SIZE = 1
 LEARNING_RATE = 0.0003
+
+# Which of the 3 folds should be processed (either 0, 1 or 2)
 FOLD_NUM = 0
+
+# The subset of test images to be monitored (set to empty list to skip saving visualizations and speed up training)
 TEST_VIS_IMG = ["IMG_0753", "IMG_0438", "IMG_0397"]
 
 RELOAD_CHECKPOINT = False
