@@ -83,6 +83,22 @@ class ModelFC4:
         angle = torch.acos(dot) * (180 / math.pi)
         return torch.mean(angle)
 
+    @staticmethod
+    def get_tvd_loss(x: torch.Tensor, reg_factor: float = 0.5) -> torch.Tensor:
+        """
+        Calculate Total Variation Regularization (TVR) loss using the anisotropic version
+        More info at: https://www.wikiwand.com/en/Total_variation_denoising
+        """
+        diff_i = torch.sum(torch.abs(x[:, :, :, :, 1:] - x[:, :, :, :, :-1]))
+        diff_j = torch.sum(torch.abs(x[:, :, :, 1:, :] - x[:, :, :, :-1, :]))
+        return reg_factor * (diff_i + diff_j)
+
+    @staticmethod
+    def get_contrast_loss(x: torch.Tensor, reg_factor: float = 0.5) -> torch.Tensor:
+        x_a = (x > 0.5).type(torch.cuda.FloatTensor)
+        x_b = (x < 0.5).type(torch.cuda.FloatTensor)
+        return -(x * x_a).mean(0).sum() * reg_factor * 0.5 + (x * x_b).mean(0).sum() * reg_factor * 0.5
+
     def print_network(self):
         print(self.__network)
 
