@@ -27,10 +27,10 @@ PATH_TO_PTH_CHECKPOINT = os.path.join("trained_models", "fold_{}".format(FOLD_NU
 
 
 def main(opt):
-    fold_num = opt.fold_num
-    epochs = opt.epochs
-    batch_size = opt.batch_size
-    learning_rate = opt.learning_rate
+    fold_num = int(opt.fold_num)
+    epochs = int(opt.epochs)
+    batch_size = int(opt.batch_size)
+    learning_rate = float(opt.learning_rate)
 
     path_to_log = os.path.join("logs", "fold_{}_{}".format(str(fold_num), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
@@ -44,7 +44,7 @@ def main(opt):
 
     model.print_network()
     model.log_network(path_to_log)
-    model.set_optimizer(LEARNING_RATE)
+    model.set_optimizer(learning_rate)
 
     training_set = ColorCheckerDataset(train=True, folds_num=fold_num)
     training_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True, num_workers=20, drop_last=True)
