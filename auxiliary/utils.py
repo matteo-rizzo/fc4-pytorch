@@ -6,6 +6,7 @@ import pandas as pd
 import torch
 import torchvision.transforms.functional as F
 from PIL.Image import Image
+from torch import Tensor
 from torch.nn.functional import interpolate
 
 from auxiliary.settings import DEVICE
@@ -36,7 +37,7 @@ def print_metrics(current_metrics: dict, best_metrics: dict):
     print(" Worst 5% ..... : {:.4f} (Best: {:.4f})".format(current_metrics["wst5"], best_metrics["wst5"]))
 
 
-def correct(img: Image, illuminant: torch.Tensor) -> Image:
+def correct(img: Image, illuminant: Tensor) -> Image:
     """
     Corrects the color of the illuminant of a linear image based on an estimated (linear) illuminant
     @param img: a linear image
@@ -46,7 +47,7 @@ def correct(img: Image, illuminant: torch.Tensor) -> Image:
     img = F.to_tensor(img).to(DEVICE)
 
     # Correct the image
-    correction = illuminant.unsqueeze(2).unsqueeze(3) * torch.sqrt(torch.Tensor([3])).to(DEVICE)
+    correction = illuminant.unsqueeze(2).unsqueeze(3) * torch.sqrt(Tensor([3])).to(DEVICE)
     corrected_img = torch.div(img, correction + 1e-10)
 
     # Normalize the image
@@ -57,10 +58,10 @@ def correct(img: Image, illuminant: torch.Tensor) -> Image:
     return F.to_pil_image(linear_to_nonlinear(normalized_img).squeeze(), mode="RGB")
 
 
-def linear_to_nonlinear(img: Union[np.array, Image, torch.Tensor]) -> Union[np.array, Image, torch.Tensor]:
+def linear_to_nonlinear(img: Union[np.array, Image, Tensor]) -> Union[np.array, Image, Tensor]:
     if isinstance(img, np.ndarray):
         return np.power(img, (1.0 / 2.2))
-    if isinstance(img, torch.Tensor):
+    if isinstance(img, Tensor):
         return torch.pow(img, 1.0 / 2.2)
     return F.to_pil_image(torch.pow(F.to_tensor(img), 1.0 / 2.2).squeeze(), mode="RGB")
 
@@ -82,13 +83,13 @@ def hwc_to_chw(x: np.ndarray) -> np.ndarray:
     return x.transpose(2, 0, 1)
 
 
-def scale(x: torch.Tensor) -> torch.Tensor:
+def scale(x: Tensor) -> Tensor:
     """ Scales all values of a tensor between 0 and 1 """
-    x -= x.min()
-    x /= x.max()
+    x = x - x.min()
+    x = x / x.max()
     return x
 
 
-def rescale(x: torch.Tensor, size: tuple) -> torch.Tensor:
+def rescale(x: Tensor, size: tuple) -> Tensor:
     """ Rescale tensor to image size for better visualization """
     return interpolate(x, size, mode='bilinear')

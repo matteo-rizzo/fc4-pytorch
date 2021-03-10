@@ -5,6 +5,7 @@ from typing import Union
 import matplotlib.pyplot as plt
 import torch
 import torchvision.transforms.functional as F
+from torch import Tensor
 from torch.nn.functional import normalize
 from torchvision.transforms import transforms
 
@@ -20,7 +21,7 @@ class ModelFC4:
         self.__optimizer = None
         self.__network = FC4().to(self.__device)
 
-    def predict(self, img: torch.Tensor, return_steps: bool = False) -> Union[torch.Tensor, tuple]:
+    def predict(self, img: Tensor, return_steps: bool = False) -> Union[Tensor, tuple]:
         """
         Performs inference on the input image using the FC4 method.
         @param img: the image for which a colour of the illuminant has to be estimated
@@ -58,7 +59,7 @@ class ModelFC4:
         for i in range(2):
             for j in range(3):
                 plot, text = plots[i * 3 + j]
-                if isinstance(plot, torch.Tensor):
+                if isinstance(plot, Tensor):
                     plot = plot.cpu()
                 axs[i, j].imshow(plot, cmap="gray" if "confidence" in text else None)
                 axs[i, j].set_title(text)
@@ -71,33 +72,41 @@ class ModelFC4:
         plt.clf()
         plt.close('all')
 
-    def optimize(self, pred: torch.Tensor, label: torch.Tensor) -> float:
-        loss = self.get_angular_loss(pred, label)
+    def optimize(self, img: Tensor, label: Tensor) -> float:
+        self.__optimizer.zero_grad()
+
+        if USE_CONFIDENCE_WEIGHTED_POOLING:
+            pred, _, confidence = self.predict(img, return_steps=True)
+            loss = self.get_regularized_loss(pred, label, confidence)
+        else:
+            pred = self.predict(img)
+            loss = self.get_angular_loss(pred, label)
+
         loss.backward()
         self.__optimizer.step()
         return loss.item()
 
     @staticmethod
-    def get_angular_loss(pred: torch.Tensor, label: torch.Tensor, safe_v: float = 0.999999) -> torch.Tensor:
+    def get_angular_loss(pred: Tensor, label: Tensor, safe_v: float = 0.999999) -> Tensor:
         dot = torch.clamp(torch.sum(normalize(pred, dim=1) * normalize(label, dim=1), dim=1), -safe_v, safe_v)
         angle = torch.acos(dot) * (180 / math.pi)
         return torch.mean(angle)
 
     @staticmethod
-    def get_tvd_loss(x: torch.Tensor, reg_factor: float = 0.5) -> torch.Tensor:
+    def get_total_variation_loss(x: Tensor, alpha: float = 0.00001) -> Tensor:
         """
-        Calculate Total Variation Regularization (TVR) loss using the anisotropic version
-        More info at: https://www.wikiwand.com/en/Total_variation_denoising
+        Computes the total variation regularization (anisotropic version) for regularization of the learnable attention
+        masks by encouraging spatial smoothness mask
+        -> Reference: https://www.wikiwand.com/en/Total_variation_denoising
         """
-        diff_i = torch.sum(torch.abs(x[:, :, :, :, 1:] - x[:, :, :, :, :-1]))
-        diff_j = torch.sum(torch.abs(x[:, :, :, 1:, :] - x[:, :, :, :-1, :]))
-        return reg_factor * (diff_i + diff_j)
+        diff_i = torch.sum(torch.abs(x[:, :, :, 1:] - x[:, :, :, :-1]))
+        diff_j = torch.sum(torch.abs(x[:, :, 1:, :] - x[:, :, :-1, :]))
+        return alpha * (diff_i + diff_j)
 
-    @staticmethod
-    def get_contrast_loss(x: torch.Tensor, reg_factor: float = 0.5) -> torch.Tensor:
-        x_a = (x > 0.5).type(torch.cuda.FloatTensor)
-        x_b = (x < 0.5).type(torch.cuda.FloatTensor)
-        return -(x * x_a).mean(0).sum() * reg_factor * 0.5 + (x * x_b).mean(0).sum() * reg_factor * 0.5
+    def get_regularized_loss(self, pred: Tensor, label: Tensor, attention_mask: Tensor) -> Tensor:
+        angular_loss = self.get_angular_loss(pred, label)
+        total_variation_loss = self.get_total_variation_loss(attention_mask)
+        return angular_loss + total_variation_loss
 
     def print_network(self):
         print(self.__network)
@@ -120,6 +129,3 @@ class ModelFC4:
     def set_optimizer(self, learning_rate: float, optimizer_type: str = "adam"):
         optimizers_map = {"adam": torch.optim.Adam, "rmsprop": torch.optim.RMSprop}
         self.__optimizer = optimizers_map[optimizer_type](self.__network.parameters(), lr=learning_rate)
-
-    def reset_gradient(self):
-        self.__optimizer.zero_grad()

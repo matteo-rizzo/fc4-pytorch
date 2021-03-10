@@ -68,10 +68,8 @@ def main():
         start = time.time()
 
         for i, (img, label, _) in enumerate(training_loader):
-            model.reset_gradient()
             img, label = img.to(DEVICE), label.to(DEVICE)
-            pred = model.predict(img)
-            loss = model.optimize(pred, label)
+            loss = model.optimize(img, label)
             train_loss.update(loss)
 
             if i % 5 == 0:
@@ -99,10 +97,11 @@ def main():
                         pred, rgb, confidence = model.predict(img, return_steps=True)
                         model.vis_confidence({"img": img, "label": label, "pred": pred, "rgb": rgb, "c": confidence},
                                              os.path.join(path_to_vis, img_id, "epoch_{}.png".format(epoch)))
+                        loss = model.get_regularized_loss(pred, label, confidence).item()
                     else:
                         pred = model.predict(img)
+                        loss = model.get_angular_loss(pred, label).item()
 
-                    loss = model.get_angular_loss(pred, label).item()
                     val_loss.update(loss)
                     evaluator.add_error(loss)
 
