@@ -1,3 +1,4 @@
+import argparse
 import os
 import time
 
@@ -25,8 +26,13 @@ RELOAD_CHECKPOINT = False
 PATH_TO_PTH_CHECKPOINT = os.path.join("trained_models", "fold_{}".format(FOLD_NUM), "model.pth")
 
 
-def main():
-    path_to_log = os.path.join("logs", "fold_{}_{}".format(str(FOLD_NUM), str(time.time())))
+def main(opt):
+    fold_num = opt.fold_num
+    epochs = opt.epochs
+    batch_size = opt.batch_size
+    learning_rate = opt.learning_rate
+
+    path_to_log = os.path.join("logs", "fold_{}_{}".format(str(fold_num), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
     path_to_metrics_log = os.path.join(path_to_log, "metrics.csv")
 
@@ -40,12 +46,12 @@ def main():
     model.log_network(path_to_log)
     model.set_optimizer(LEARNING_RATE)
 
-    training_set = ColorCheckerDataset(train=True, folds_num=FOLD_NUM)
-    training_loader = DataLoader(training_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=20, drop_last=True)
+    training_set = ColorCheckerDataset(train=True, folds_num=fold_num)
+    training_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True, num_workers=20, drop_last=True)
     print("\n Training set size ... : {}".format(len(training_set)))
 
-    test_set = ColorCheckerDataset(train=False, folds_num=FOLD_NUM)
-    test_loader = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=False, num_workers=20, drop_last=True)
+    test_set = ColorCheckerDataset(train=False, folds_num=fold_num)
+    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=20, drop_last=True)
     print(" Test set size ....... : {}\n".format(len(test_set)))
 
     path_to_vis = os.path.join(path_to_log, "test_vis")
@@ -54,14 +60,14 @@ def main():
         os.makedirs(path_to_vis)
 
     print("\n**************************************************************")
-    print("\t\t\t Training FC4 - Fold {}".format(FOLD_NUM))
+    print("\t\t\t Training FC4 - Fold {}".format(fold_num))
     print("**************************************************************\n")
 
     evaluator = Evaluator()
     best_val_loss, best_metrics = 100.0, evaluator.get_best_metrics()
     train_loss, val_loss = LossTracker(), LossTracker()
 
-    for epoch in range(EPOCHS):
+    for epoch in range(epochs):
 
         model.train_mode()
         train_loss.reset()
@@ -73,7 +79,7 @@ def main():
             train_loss.update(loss)
 
             if i % 5 == 0:
-                print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} ]".format(epoch, EPOCHS, i, loss))
+                print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} ]".format(epoch, epochs, i, loss))
 
         train_time = time.time() - start
 
@@ -106,7 +112,7 @@ def main():
                     evaluator.add_error(loss)
 
                     if i % 5 == 0:
-                        print("[ Epoch: {}/{} - Batch: {}] | Val loss: {:.4f} ]".format(epoch, EPOCHS, i, loss))
+                        print("[ Epoch: {}/{} - Batch: {}] | Val loss: {:.4f} ]".format(epoch, epochs, i, loss))
 
             print("\n--------------------------------------------------------------\n")
 
@@ -134,4 +140,10 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fold_num", type=str, default=FOLD_NUM)
+    parser.add_argument("--epochs", type=str, default=EPOCHS)
+    parser.add_argument('--batch_size', type=str, default=BATCH_SIZE)
+    parser.add_argument('--learning_rate', type=str, default=LEARNING_RATE)
+    opt = parser.parse_args()
+    main(opt)
