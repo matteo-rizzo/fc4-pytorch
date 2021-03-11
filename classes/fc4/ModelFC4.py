@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import torch
 import torchvision.transforms.functional as F
 from torch import Tensor
-from torch.nn.functional import normalize
+from torch.linalg import norm
+from torch.nn.functional import normalize, unfold
 from torchvision.transforms import transforms
 
 from auxiliary.settings import DEVICE, USE_CONFIDENCE_WEIGHTED_POOLING
@@ -37,7 +38,7 @@ class ModelFC4:
             return pred
         return self.__network(img)
 
-    def vis_confidence(self, model_output: dict, path_to_plot: str):
+    def save_vis(self, model_output: dict, path_to_plot: str):
         model_output = {k: v.clone().detach().to(DEVICE) for k, v in model_output.items()}
 
         img, label, pred = model_output["img"], model_output["label"], model_output["pred"]
@@ -93,11 +94,27 @@ class ModelFC4:
         return torch.mean(angle)
 
     @staticmethod
+    def get_sparsity_reg_loss(x: Tensor, n: int = 3, s: int = 1, alpha: float = 0.0001) -> Tensor:
+        """
+        Computes the block-wise sparsity regularization loss based on the assumption that the pixels of relevant regions
+        are not randomly distributed in spatial domain (they are likely to be located in connected regions with similar
+        blob-type shape)
+        @param x: the [1 x H x W] tensor for which the sparsity regularization must be computed
+        @param n: the length of the side of the square block to be considered
+        @param s: the stride between blocks
+        @param alpha: a weight balancing the contribution of the regularization term to the overall loss
+        """
+        reg = norm(norm(unfold(x, kernel_size=n, stride=n + s), ord=2, dim=1), ord=1, dim=1)
+        return alpha * reg
+
+    @staticmethod
     def get_total_variation_loss(x: Tensor, alpha: float = 0.00001) -> Tensor:
         """
         Computes the total variation regularization (anisotropic version) for regularization of the learnable attention
         masks by encouraging spatial smoothness mask
         -> Reference: https://www.wikiwand.com/en/Total_variation_denoising
+        @param x: the [1 x H x W] tensor for which the total variation must be computed
+        @param alpha: a weight balancing the contribution of the regularization term to the overall loss
         """
         diff_i = torch.sum(torch.abs(x[:, :, :, 1:] - x[:, :, :, :-1]))
         diff_j = torch.sum(torch.abs(x[:, :, 1:, :] - x[:, :, :-1, :]))
@@ -105,8 +122,9 @@ class ModelFC4:
 
     def get_regularized_loss(self, pred: Tensor, label: Tensor, attention_mask: Tensor) -> Tensor:
         angular_loss = self.get_angular_loss(pred, label)
+        sparsity_loss = self.get_sparsity_reg_loss(attention_mask)
         total_variation_loss = self.get_total_variation_loss(attention_mask)
-        return angular_loss + total_variation_loss
+        return angular_loss + total_variation_loss + sparsity_loss
 
     def print_network(self):
         print(self.__network)
