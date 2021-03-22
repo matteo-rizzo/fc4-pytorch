@@ -5,10 +5,10 @@ import time
 import torch
 from torch.utils.data import DataLoader
 
-from ModelAdvConfFC4 import ModelAdvConfFC4
 from auxiliary.settings import DEVICE
 from auxiliary.utils import print_metrics, log_metrics
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
+from classes.fc4.ModelAdvConfFC4 import ModelAdvConfFC4
 from classes.training.Evaluator import Evaluator
 from classes.training.LossTracker import LossTracker
 
