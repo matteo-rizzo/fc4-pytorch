@@ -86,7 +86,7 @@ class ModelAdvConfFC4:
         return loss.item(), loss_adv.item()
 
     def get_adv_loss(self, pred: Tensor, label: Tensor, c1: Tensor, c2: Tensor, alpha: float = 0.00005) -> Tensor:
-        return self.get_angular_loss(pred, label) - torch.Tensor([alpha]) * self.__kl_loss(c1, c2)
+        return self.get_angular_loss(pred, label) - torch.Tensor([alpha]) * self.__kl_loss(scale(c1), scale(c2))
 
     @staticmethod
     def get_angular_loss(pred: Tensor, label: Tensor, safe_v: float = 0.999999) -> Tensor:
