@@ -111,7 +111,7 @@ class ModelFC4:
     def get_total_variation_loss(x: Tensor, alpha: float = 0.00001) -> Tensor:
         """
         Computes the total variation regularization (anisotropic version) for regularization of the learnable attention
-        masks by encouraging spatial smoothness mask
+        masks by encouraging spatial smoothness
         -> Reference: https://www.wikiwand.com/en/Total_variation_denoising
         @param x: the [1 x H x W] tensor for which the total variation must be computed
         @param alpha: a weight balancing the contribution of the regularization term to the overall loss
@@ -123,8 +123,9 @@ class ModelFC4:
     def get_regularized_loss(self, pred: Tensor, label: Tensor, attention_mask: Tensor) -> Tensor:
         angular_loss = self.get_angular_loss(pred, label)
         sparsity_loss = self.get_sparsity_reg_loss(attention_mask)
-        total_variation_loss = self.get_total_variation_loss(attention_mask)
-        return angular_loss + total_variation_loss + sparsity_loss
+        # total_variation_loss = self.get_total_variation_loss(attention_mask)
+        # return angular_loss + total_variation_loss + sparsity_loss
+        return angular_loss + sparsity_loss
 
     def print_network(self):
         print(self.__network)

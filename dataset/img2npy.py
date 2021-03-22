@@ -45,11 +45,11 @@ def main():
     for img_metadata in tqdm(open(PATH_TO_CC_METADATA, 'r').readlines(), desc="Preprocessing images"):
         _, file_name, r, g, b = img_metadata.strip().split(' ')
 
-        illuminant = [float(r), float(g), float(b)]
-        np.save(os.path.join(PATH_TO_NUMPY_LABELS, file_name), illuminant)
-
         img_without_mcc = load_image_without_mcc(file_name, get_mcc_coord(file_name))
         np.save(os.path.join(PATH_TO_NUMPY_DATA, file_name), img_without_mcc)
+
+        illuminant = [float(r), float(g), float(b)]
+        np.save(os.path.join(PATH_TO_NUMPY_LABELS, file_name), illuminant)
 
         vis_img = Image.fromarray((linear_to_nonlinear(bgr_to_rgb(normalize(img_without_mcc))) * 255).astype(np.uint8))
         vis_img.save(os.path.join(PATH_TO_LINEAR_IMAGES, file_name))
@@ -59,6 +59,7 @@ def main():
 
 
 def load_image_without_mcc(file_name: str, mcc_coord: np.ndarray) -> np.ndarray:
+    """ Masks the Macbeth Color Checker in the image with a black polygon """
     raw = load_image(file_name)
 
     # Clip the values between 0 and 1

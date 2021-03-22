@@ -27,7 +27,7 @@ Avg	    1.86	    1.35	    1.46	    0.43	    4.22	    5.21
 StdDev  0.22	    0.23	    0.19	    0.07	    0.52	    0.84
 """
 
-MODEL_TYPE = "fc4_sum"
+MODEL_TYPE = "fc4_cwp"
 
 
 def main():
@@ -35,6 +35,7 @@ def main():
     model = ModelFC4()
 
     for num_fold in range(3):
+        fold_evaluator = Evaluator()
         test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
         dataloader = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
 
@@ -52,16 +53,26 @@ def main():
                 img, label = img.to(DEVICE), label.to(DEVICE)
                 pred = model.predict(img)
                 loss = model.get_angular_loss(pred, label)
+                fold_evaluator.add_error(loss.item())
                 evaluator.add_error(loss.item())
                 print('\t - Input: {} - Batch: {} | Loss: {:f}'.format(file_name[0], i, loss.item()))
 
+        metrics = fold_evaluator.compute_metrics()
+        print("\n Mean ............ : {:.4f}".format(metrics["mean"]))
+        print(" Median .......... : {:.4f}".format(metrics["median"]))
+        print(" Trimean ......... : {:.4f}".format(metrics["trimean"]))
+        print(" Best 25% ........ : {:.4f}".format(metrics["bst25"]))
+        print(" Worst 25% ....... : {:.4f}".format(metrics["wst25"]))
+        print(" Percentile 95 ... : {:.4f} \n".format(metrics["wst5"]))
+
+    print("\n *** AVERAGE ACROSS FOLDS *** \n")
     metrics = evaluator.compute_metrics()
-    print("\n Mean ............ : {}".format(metrics["mean"]))
-    print(" Median .......... : {}".format(metrics["median"]))
-    print(" Trimean ......... : {}".format(metrics["trimean"]))
-    print(" Best 25% ........ : {}".format(metrics["bst25"]))
-    print(" Worst 25% ....... : {}".format(metrics["wst25"]))
-    print(" Percentile 95 ... : {} \n".format(metrics["wst5"]))
+    print("\n Mean ............ : {:.4f}".format(metrics["mean"]))
+    print(" Median .......... : {:.4f}".format(metrics["median"]))
+    print(" Trimean ......... : {:.4f}".format(metrics["trimean"]))
+    print(" Best 25% ........ : {:.4f}".format(metrics["bst25"]))
+    print(" Worst 25% ....... : {:.4f}".format(metrics["wst25"]))
+    print(" Percentile 95 ... : {:.4f} \n".format(metrics["wst5"]))
 
 
 if __name__ == '__main__':
