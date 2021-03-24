@@ -33,9 +33,11 @@ def main(opt):
     batch_size = int(opt.batch_size)
     learning_rate = float(opt.learning_rate)
 
-    path_to_log = os.path.join("logs", "fold_{}_{}".format(str(fold_num), str(time.time())))
+    path_to_log = os.path.join("logs", "adv_fold_{}_{}".format(str(fold_num), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
-    path_to_metrics_log = os.path.join(path_to_log, "metrics.csv")
+
+    path_to_metrics = os.path.join(path_to_log, "metrics.csv")
+    path_to_metrics_adv = os.path.join(path_to_log, "metrics_adv.csv")
 
     model = ModelAdvConfFC4()
 
@@ -87,6 +89,7 @@ def main(opt):
             if i % 5 == 0:
                 print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} - Train loss adv: {:.4f} ]"
                       .format(epoch, epochs, i, loss, loss_adv))
+                break
 
         train_time = time.time() - start
 
@@ -125,6 +128,7 @@ def main(opt):
                     if i % 5 == 0:
                         print("[ Epoch: {}/{} - Batch: {}] | Val loss: {:.4f} - Val loss adv: {:.4f}]"
                               .format(epoch, epochs, i, loss, loss_adv))
+                        break
 
             print("\n--------------------------------------------------------------\n")
 
@@ -154,7 +158,8 @@ def main(opt):
             print("Saving new best models... \n")
             model.save(path_to_log)
 
-        log_metrics(train_loss.avg, val_loss.avg, metrics, best_metrics, path_to_metrics_log)
+        log_metrics(train_loss.avg, val_loss.avg, metrics, best_metrics, path_to_metrics)
+        log_metrics(train_loss_adv.avg, val_loss_adv.avg, metrics_adv, best_metrics_adv, path_to_metrics_adv)
 
 
 if __name__ == '__main__':

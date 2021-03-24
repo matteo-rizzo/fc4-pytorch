@@ -50,7 +50,6 @@ class FC4(torch.nn.Module):
 
             # Confidence (last dimension)
             confidence = out[:, 3:4, :, :]
-            # confidence = torch.rand(confidence.shape)
 
             # Confidence-weighted pooling
             pred = normalize(torch.sum(torch.sum(rgb * confidence, 2), 2), dim=1)
