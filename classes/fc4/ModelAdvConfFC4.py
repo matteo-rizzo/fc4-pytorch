@@ -122,7 +122,7 @@ class ModelAdvConfFC4:
         path_to_model = os.path.join(path_to_pretrained, "model.pth")
         self.__network.load_state_dict(torch.load(path_to_model, map_location=self.__device))
         path_to_model_adv = os.path.join(path_to_pretrained, "model_adv.pth")
-        self.__network.load_state_dict(torch.load(path_to_model_adv, map_location=self.__device))
+        self.__network_adv.load_state_dict(torch.load(path_to_model_adv, map_location=self.__device))
 
     def set_optimizer(self, learning_rate: float, optimizer_type: str = "sgd"):
         optimizers_map = {"adam": torch.optim.Adam, "rmsprop": torch.optim.RMSprop, "sgd": torch.optim.SGD}

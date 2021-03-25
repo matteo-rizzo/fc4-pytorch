@@ -776,3 +776,5 @@ modules.xml
 /dataset/preprocessed/
 /results/
 /trained_models/
+/vis/plots/
+/vis/plots/

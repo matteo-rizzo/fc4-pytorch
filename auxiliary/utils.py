@@ -1,11 +1,13 @@
+import math
 import os
-from typing import Union
+from typing import Union, List
 
 import numpy as np
 import pandas as pd
 import torch
 import torchvision.transforms.functional as F
 from PIL.Image import Image
+from scipy.spatial.distance import jensenshannon
 from torch import Tensor
 from torch.nn.functional import interpolate
 
@@ -93,3 +95,19 @@ def scale(x: Tensor) -> Tensor:
 def rescale(x: Tensor, size: tuple) -> Tensor:
     """ Rescale tensor to image size for better visualization """
     return interpolate(x, size, mode='bilinear')
+
+
+def angular_error(x: Tensor, y: Tensor, safe_v: float = 0.999999) -> Tensor:
+    x, y = torch.nn.functional.normalize(x, dim=1), torch.nn.functional.normalize(y, dim=1)
+    dot = torch.clamp(torch.sum(x * y, dim=1), -safe_v, safe_v)
+    angle = torch.acos(dot) * (180 / math.pi)
+    return torch.mean(angle).item()
+
+
+def jsd(p: List, q: List) -> float:
+    """
+    Jensen-Shannon Divergence (JSD) between two proability distributions as square of scipy's JS distance. Refs:
+    - https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.jensenshannon.html
+    - https://stackoverflow.com/questions/15880133/jensen-shannon-divergence
+    """
+    return jensenshannon(p, q) ** 2
