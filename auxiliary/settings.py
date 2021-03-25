@@ -3,13 +3,14 @@ import re
 import numpy as np
 import torch
 
+
 # --- Determinism (for reproducibility) ---
 
-RANDOM_SEED = 0
+def make_deterministic(seed: int):
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    torch.backends.cudnn.benchmark = False
 
-torch.manual_seed(RANDOM_SEED)
-np.random.seed(RANDOM_SEED)
-torch.backends.cudnn.benchmark = False
 
 # --- Device (cpu or cuda:n) ---
 

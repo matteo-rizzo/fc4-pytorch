@@ -5,16 +5,18 @@ import time
 import torch
 from torch.utils.data import DataLoader
 
-from auxiliary.settings import DEVICE
+from auxiliary.settings import DEVICE, make_deterministic
 from auxiliary.utils import print_metrics, log_metrics
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.fc4.ModelAdvConfFC4 import ModelAdvConfFC4
 from classes.training.Evaluator import Evaluator
 from classes.training.LossTracker import LossTracker
 
+RANDOM_SEED = 0
 EPOCHS = 2000
 BATCH_SIZE = 1
 LEARNING_RATE = 0.0003
+ADV_LAMBDA = 0.00005
 
 # Which of the 3 folds should be processed (either 0, 1 or 2)
 FOLD_NUM = 0
@@ -24,14 +26,15 @@ FOLD_NUM = 0
 TEST_VIS_IMG = []
 
 RELOAD_CHECKPOINT = False
-PATH_TO_CHECKPOINT = os.path.join("trained_models", "fold_{}".format(FOLD_NUM))
+PATH_TO_CHECKPOINT = os.path.join("../trained_models", "fold_{}".format(FOLD_NUM))
 
 
 def main(opt):
-    fold_num = int(opt.fold_num)
-    epochs = int(opt.epochs)
-    batch_size = int(opt.batch_size)
-    learning_rate = float(opt.learning_rate)
+    fold_num = opt.fold_num
+    epochs = opt.epochs
+    batch_size = opt.batch_size
+    learning_rate = opt.lr
+    adv_lambda = opt.adv_lambda
 
     path_to_log = os.path.join("logs", "adv_fold_{}_{}".format(str(fold_num), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
@@ -39,7 +42,7 @@ def main(opt):
     path_to_metrics = os.path.join(path_to_log, "metrics.csv")
     path_to_metrics_adv = os.path.join(path_to_log, "metrics_adv.csv")
 
-    model = ModelAdvConfFC4()
+    model = ModelAdvConfFC4(adv_lambda)
 
     if RELOAD_CHECKPOINT:
         print('\n Reloading checkpoint - pretrained model stored at: {} \n'.format(PATH_TO_CHECKPOINT))
@@ -137,13 +140,13 @@ def main(opt):
         metrics = evaluator.compute_metrics()
         metrics_adv = evaluator_adv.compute_metrics()
         print("\n********************************************************************")
-        print(" Train Time ....... : {:.4f}".format(train_time))
-        print(" Train Loss ....... : {:.4f}".format(train_loss.avg))
-        print(" Train Loss Adv ... : {:.4f}".format(train_loss_adv.avg))
+        print(" Train Time ........ : {:.4f}".format(train_time))
+        print(" Train Loss Base ... : {:.4f}".format(train_loss.avg))
+        print(" Train Loss Adv .... : {:.4f}".format(train_loss_adv.avg))
         if val_time > 0.1:
             print("....................................................................")
             print(" Val Time ......... : {:.4f}".format(val_time))
-            print(" Val Loss ......... : {:.4f}".format(val_loss.avg))
+            print(" Val Loss Base .... : {:.4f}".format(val_loss.avg))
             print(" Val Loss Adv ..... : {:.4f}".format(val_loss.avg))
             print("....................................................................")
             print_metrics(metrics, best_metrics)
@@ -164,9 +167,21 @@ def main(opt):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--fold_num", type=str, default=FOLD_NUM)
-    parser.add_argument("--epochs", type=str, default=EPOCHS)
-    parser.add_argument('--batch_size', type=str, default=BATCH_SIZE)
-    parser.add_argument('--learning_rate', type=str, default=LEARNING_RATE)
+    parser.add_argument("--fold_num", type=int, default=FOLD_NUM)
+    parser.add_argument("--epochs", type=int, default=EPOCHS)
+    parser.add_argument('--batch_size', type=int, default=BATCH_SIZE)
+    parser.add_argument('--random_seed', type=int, default=RANDOM_SEED)
+    parser.add_argument('--lr', type=float, default=LEARNING_RATE)
+    parser.add_argument('--adv_lambda', type=float, default=ADV_LAMBDA)
     opt = parser.parse_args()
+    make_deterministic(opt.random_seed)
+
+    print("\n *** Training configuration ***")
+    print("\t Fold num ........ : {}".format(opt.fold_num))
+    print("\t Epochs .......... : {}".format(opt.epochs))
+    print("\t Batch size ...... : {}".format(opt.batch_size))
+    print("\t Learning rate ... : {}".format(opt.lr))
+    print("\t Random seed ..... : {}".format(opt.random_seed))
+    print("\t Adv lambda ...... : {}".format(opt.adv_lambda))
+
     main(opt)

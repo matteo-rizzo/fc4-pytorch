@@ -5,13 +5,14 @@ import time
 import torch
 from torch.utils.data import DataLoader
 
-from auxiliary.settings import DEVICE, USE_CONFIDENCE_WEIGHTED_POOLING
+from auxiliary.settings import DEVICE, USE_CONFIDENCE_WEIGHTED_POOLING, make_deterministic
 from auxiliary.utils import print_metrics, log_metrics
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.fc4.ModelFC4 import ModelFC4
 from classes.training.Evaluator import Evaluator
 from classes.training.LossTracker import LossTracker
 
+RANDOM_SEED = 0
 EPOCHS = 2000
 BATCH_SIZE = 1
 LEARNING_RATE = 0.0003
@@ -23,7 +24,7 @@ FOLD_NUM = 0
 TEST_VIS_IMG = ["IMG_0753", "IMG_0438", "IMG_0397"]
 
 RELOAD_CHECKPOINT = False
-PATH_TO_PTH_CHECKPOINT = os.path.join("trained_models", "fold_{}".format(FOLD_NUM), "model.pth")
+PATH_TO_PTH_CHECKPOINT = os.path.join("../trained_models", "fold_{}".format(FOLD_NUM), "model.pth")
 
 
 def main(opt):
@@ -142,9 +143,19 @@ def main(opt):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--fold_num", type=str, default=FOLD_NUM)
-    parser.add_argument("--epochs", type=str, default=EPOCHS)
-    parser.add_argument('--batch_size', type=str, default=BATCH_SIZE)
-    parser.add_argument('--learning_rate', type=str, default=LEARNING_RATE)
+    parser.add_argument("--fold_num", type=int, default=FOLD_NUM)
+    parser.add_argument("--epochs", type=int, default=EPOCHS)
+    parser.add_argument('--batch_size', type=int, default=BATCH_SIZE)
+    parser.add_argument('--random_seed', type=int, default=RANDOM_SEED)
+    parser.add_argument('--learning_rate', type=float, default=LEARNING_RATE)
     opt = parser.parse_args()
+    make_deterministic(opt.random_seed)
+
+    print("\n *** Training configuration ***")
+    print("\t Fold num ........ : {}".format(opt.fold_num))
+    print("\t Epochs .......... : {}".format(opt.epochs))
+    print("\t Batch size ...... : {}".format(opt.batch_size))
+    print("\t Learning rate ... : {}".format(opt.lr))
+    print("\t Random seed ..... : {}".format(opt.random_seed))
+
     main(opt)

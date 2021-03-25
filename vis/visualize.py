@@ -14,13 +14,13 @@ from classes.fc4.ModelFC4 import ModelFC4
 from classes.training.Evaluator import Evaluator
 
 # Set to -1 to process all the samples in the test set of the current fold
-NUM_SAMPLES = -1
+NUM_SAMPLES = 10
 
 # The number of folds to be processed (either 1, 2 or 3)
-NUM_FOLDS = 3
+NUM_FOLDS = 1
 
 # Where to save the generated visualizations
-PATH_TO_SAVED = os.path.join("vis", "cc_training_set_{}".format(time.time()))
+PATH_TO_SAVED = os.path.join("", "plots", "adv_cc_train_10_samples_{}".format(time.time()))
 
 
 def main():
@@ -32,7 +32,7 @@ def main():
         test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
         dataloader = DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
 
-        path_to_pretrained = os.path.join("trained_models", "fc4_cwp", "fold_{}".format(num_fold), "model.pth")
+        path_to_pretrained = os.path.join("../trained_models", "fc4_adv", "fold_{}".format(num_fold), "model_adv.pth")
         model.load(path_to_pretrained)
         model.evaluation_mode()
 

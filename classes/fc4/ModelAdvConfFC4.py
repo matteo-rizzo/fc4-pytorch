@@ -16,8 +16,9 @@ from classes.fc4.FC4 import FC4
 
 class ModelAdvConfFC4:
 
-    def __init__(self):
+    def __init__(self, adv_lambda: float = 0.00005):
         self.__device = DEVICE
+        self.__adv_lambda = adv_lambda
         self.__optimizer = None
         self.__optimizer_adv = None
         self.__network = FC4().to(self.__device)
@@ -85,8 +86,8 @@ class ModelAdvConfFC4:
 
         return loss.item(), loss_adv.item()
 
-    def get_adv_loss(self, pred: Tensor, label: Tensor, c1: Tensor, c2: Tensor, alpha: float = 0.00005) -> Tensor:
-        alpha = torch.Tensor([alpha]).to(self.__device)
+    def get_adv_loss(self, pred: Tensor, label: Tensor, c1: Tensor, c2: Tensor) -> Tensor:
+        alpha = torch.Tensor([self.__adv_lambda]).to(self.__device)
         angular_loss = self.get_angular_loss(pred, label)
         kl_loss = self.get_kl_loss(c1, c2)
         return angular_loss - alpha * kl_loss
