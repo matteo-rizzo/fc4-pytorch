@@ -92,7 +92,6 @@ def main(opt):
             if i % 5 == 0:
                 print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} - Train loss adv: {:.4f} ]"
                       .format(epoch, epochs, i, loss, loss_adv))
-                break
 
         train_time = time.time() - start
 
@@ -131,7 +130,6 @@ def main(opt):
                     if i % 5 == 0:
                         print("[ Epoch: {}/{} - Batch: {}] | Val loss: {:.4f} - Val loss adv: {:.4f}]"
                               .format(epoch, epochs, i, loss, loss_adv))
-                        break
 
             print("\n--------------------------------------------------------------\n")
 

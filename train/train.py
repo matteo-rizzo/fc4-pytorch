@@ -21,17 +21,18 @@ LEARNING_RATE = 0.0003
 FOLD_NUM = 0
 
 # The subset of test images to be monitored (set to empty list to skip saving visualizations and speed up training)
-TEST_VIS_IMG = ["IMG_0753", "IMG_0438", "IMG_0397"]
+# TEST_VIS_IMG = ["IMG_0753", "IMG_0438", "IMG_0397"]
+TEST_VIS_IMG = []
 
 RELOAD_CHECKPOINT = False
 PATH_TO_PTH_CHECKPOINT = os.path.join("../trained_models", "fold_{}".format(FOLD_NUM), "model.pth")
 
 
 def main(opt):
-    fold_num = int(opt.fold_num)
-    epochs = int(opt.epochs)
-    batch_size = int(opt.batch_size)
-    learning_rate = float(opt.learning_rate)
+    fold_num = opt.fold_num
+    epochs = opt.epochs
+    batch_size = opt.batch_size
+    learning_rate = opt.lr
 
     path_to_log = os.path.join("logs", "fold_{}_{}".format(str(fold_num), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
@@ -147,7 +148,7 @@ if __name__ == '__main__':
     parser.add_argument("--epochs", type=int, default=EPOCHS)
     parser.add_argument('--batch_size', type=int, default=BATCH_SIZE)
     parser.add_argument('--random_seed', type=int, default=RANDOM_SEED)
-    parser.add_argument('--learning_rate', type=float, default=LEARNING_RATE)
+    parser.add_argument('--lr', type=float, default=LEARNING_RATE)
     opt = parser.parse_args()
     make_deterministic(opt.random_seed)
 
