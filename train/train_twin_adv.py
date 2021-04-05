@@ -15,7 +15,7 @@ from classes.training.LossTracker import LossTracker
 RANDOM_SEED = 0
 EPOCHS = 2000
 BATCH_SIZE = 1
-LEARNING_RATE = 0.00003
+LEARNING_RATE = 0.00001
 ADV_LAMBDA = 0.00005
 FOLD_NUM = 0
 
