@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from auxiliary.settings import DEVICE
 from auxiliary.utils import angular_error, jsd, scale
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
-from classes.fc4.ModelAdvConfFC4 import ModelAdvConfFC4
+from classes.fc4.ModelTwinAdvConfFC4 import ModelAdvConfFC4
 from classes.training.Evaluator import Evaluator
 
 NUM_FOLD = 0

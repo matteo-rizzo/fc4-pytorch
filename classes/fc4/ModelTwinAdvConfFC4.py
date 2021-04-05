@@ -11,12 +11,13 @@ from auxiliary.utils import scale
 from classes.fc4.FC4 import FC4
 
 
-class ModelAdvConfFC4:
+class ModelTwinAdvConfFC4:
 
     def __init__(self, adv_lambda: float = 0.00005):
         self.__device = DEVICE
         self.__adv_lambda = adv_lambda
         self.__optimizer = None
+        self.__optimizer_adv = None
         self.__network = FC4().to(self.__device)
         self.__network_adv = FC4().to(self.__device)
         self.__kl_loss = torch.nn.KLDivLoss(size_average=None, reduce=None, reduction='sum').to(self.__device)
@@ -30,13 +31,22 @@ class ModelAdvConfFC4:
         """
         return self.__network(img), self.__network_adv(img)
 
-    def optimize(self, img: Tensor, label: Tensor) -> float:
+    def optimize(self, img: Tensor, label: Tensor) -> Tuple:
         self.__optimizer.zero_grad()
+        self.__optimizer_adv.zero_grad()
+
         (pred, _, confidence), (pred_adv, _, confidence_adv) = self.predict(img)
-        loss = self.get_adv_loss(pred_adv, label, confidence, confidence_adv)
-        loss.backward()
+
+        loss = self.get_angular_loss(pred.clone(), label)
+        loss.backward(retain_graph=True)
+
+        loss_adv = self.get_adv_loss(pred_adv, label, confidence, confidence_adv)
+        loss_adv.backward()
+
         self.__optimizer.step()
-        return loss.item()
+        self.__optimizer_adv.step()
+
+        return loss.item(), loss_adv.item()
 
     def get_adv_loss(self, pred: Tensor, label: Tensor, c1: Tensor, c2: Tensor) -> Tensor:
         alpha = torch.Tensor([self.__adv_lambda]).to(self.__device)
@@ -71,10 +81,6 @@ class ModelAdvConfFC4:
         torch.save(self.__network.state_dict(), os.path.join(path_to_log, "model.pth"))
         torch.save(self.__network_adv.state_dict(), os.path.join(path_to_log, "model_adv.pth"))
 
-    def load_base(self, path_to_pretrained: str):
-        path_to_model = os.path.join(path_to_pretrained, "model.pth")
-        self.__network.load_state_dict(torch.load(path_to_model, map_location=self.__device))
-
     def load(self, path_to_pretrained: str):
         path_to_model = os.path.join(path_to_pretrained, "model.pth")
         self.__network.load_state_dict(torch.load(path_to_model, map_location=self.__device))
@@ -84,4 +90,5 @@ class ModelAdvConfFC4:
     def set_optimizer(self, learning_rate: float, optimizer_type: str = "sgd"):
         optimizers_map = {"adam": torch.optim.Adam, "rmsprop": torch.optim.RMSprop, "sgd": torch.optim.SGD}
         optimizer = optimizers_map[optimizer_type]
-        self.__optimizer = optimizer(self.__network_adv.parameters(), lr=learning_rate)
+        self.__optimizer = optimizer(self.__network.parameters(), lr=learning_rate)
+        self.__optimizer_adv = optimizer(self.__network_adv.parameters(), lr=learning_rate)

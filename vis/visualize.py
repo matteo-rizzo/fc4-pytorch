@@ -14,13 +14,14 @@ from classes.fc4.ModelFC4 import ModelFC4
 from classes.training.Evaluator import Evaluator
 
 # Set to -1 to process all the samples in the test set of the current fold
-NUM_SAMPLES = 10
+NUM_SAMPLES = 1
 
 # The number of folds to be processed (either 1, 2 or 3)
 NUM_FOLDS = 1
 
 # Where to save the generated visualizations
-PATH_TO_SAVED = os.path.join("vis", "plots", "cc_train_binary_confidence_{}".format(time.time()))
+# PATH_TO_SAVED = os.path.join("vis", "plots", "cc_train_binary_confidence_{}".format(time.time()))
+PATH_TO_SAVED = os.path.join("vis", "plots", "cc_train_base_tvbs_{}".format(time.time()))
 
 
 def main():
@@ -32,7 +33,8 @@ def main():
         test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
         dataloader = DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
 
-        path_to_pretrained = os.path.join("trained_models", "fc4_cwp", "fold_{}".format(num_fold), "model.pth")
+        # path_to_pretrained = os.path.join("trained_models", "fc4_cwp", "fold_{}".format(num_fold), "model.pth")
+        path_to_pretrained = os.path.join("trained_models/fc4_cwp_reg_spar_tv/fold_0/model.pth")
         model.load(path_to_pretrained)
         model.evaluation_mode()
 
@@ -61,8 +63,8 @@ def main():
                 scaled_confidence = rescale(confidence, size).squeeze(0).permute(1, 2, 0)
 
                 # ------------------------------------------------------------------------------------------
-                x, y = torch.ones_like(scaled_confidence), torch.zeros_like(scaled_confidence)
-                scaled_confidence = torch.where(scaled_confidence > scaled_confidence.mean().item(), x, y)
+                # x, y = torch.ones_like(scaled_confidence), torch.zeros_like(scaled_confidence)
+                # scaled_confidence = torch.where(scaled_confidence > scaled_confidence.mean().item(), x, y)
                 # ------------------------------------------------------------------------------------------
 
                 weighted_est = scale(rgb * confidence)
