@@ -15,7 +15,7 @@ from classes.training.LossTracker import LossTracker
 RANDOM_SEED = 0
 EPOCHS = 2000
 BATCH_SIZE = 1
-LEARNING_RATE = 0.0003
+LEARNING_RATE = 0.00003
 ADV_LAMBDA = 0.00005
 
 # Which of the 3 folds should be processed (either 0, 1 or 2)
@@ -26,7 +26,7 @@ FOLD_NUM = 0
 TEST_VIS_IMG = []
 
 RELOAD_CHECKPOINT = False
-PATH_TO_CHECKPOINT = os.path.join("../trained_models", "fold_{}".format(FOLD_NUM))
+PATH_TO_CHECKPOINT = os.path.join("trained_models", "fold_{}".format(FOLD_NUM))
 
 
 def main(opt):
@@ -91,7 +91,7 @@ def main(opt):
 
             if i % 5 == 0:
                 print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} - Train loss adv: {:.4f} ]"
-                      .format(epoch, epochs, i, loss, loss_adv))
+                      .format(epoch + 1, epochs, i, loss, loss_adv))
 
         train_time = time.time() - start
 
@@ -129,7 +129,7 @@ def main(opt):
 
                     if i % 5 == 0:
                         print("[ Epoch: {}/{} - Batch: {}] | Val loss: {:.4f} - Val loss adv: {:.4f}]"
-                              .format(epoch, epochs, i, loss, loss_adv))
+                              .format(epoch + 1, epochs, i, loss, loss_adv))
 
             print("\n--------------------------------------------------------------\n")
 

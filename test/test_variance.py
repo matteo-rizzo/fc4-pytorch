@@ -11,26 +11,26 @@ from classes.fc4.ModelAdvConfFC4 import ModelAdvConfFC4
 from classes.training.Evaluator import Evaluator
 
 NUM_FOLD = 0
-PATH_TO_PRETRAINED = os.path.join("trained_models", "adv", "fold_{}".format(NUM_FOLD))
+PATH_TO_PRETRAINED = os.path.join("trained_models", "variance", "fold_{}".format(NUM_FOLD))
 
 
 def main():
     errors, divergences = [], []
     evaluator, evaluator_adv = Evaluator(), Evaluator()
-    for lambda_val in sorted(os.listdir(PATH_TO_PRETRAINED)):
+    for seed in sorted(os.listdir(PATH_TO_PRETRAINED)):
         fold_evaluator, fold_evaluator_adv = Evaluator(), Evaluator()
         fold_eval_data = {"preds": [], "conf": [], "preds_adv": [], "conf_adv": []}
 
         test_set = ColorCheckerDataset(train=False, folds_num=NUM_FOLD)
         dataloader = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
 
-        path_to_pretrained = os.path.join(PATH_TO_PRETRAINED, lambda_val)
+        path_to_pretrained = os.path.join(PATH_TO_PRETRAINED, seed)
         model = ModelAdvConfFC4()
         model.load(path_to_pretrained)
         model.evaluation_mode()
 
-        lambda_val = float("0." + lambda_val.split("L")[1])
-        print("\n *** FOLD {} - LAMBDA: {} *** \n".format(NUM_FOLD, lambda_val))
+        seed = int(seed.split("_")[1])
+        print("\n *** FOLD {} - SEED: {} *** \n".format(NUM_FOLD, seed))
         print(" * Test set size: {}".format(len(test_set)))
         print(" * Using pretrained model stored at: {} \n".format(path_to_pretrained))
 
@@ -70,11 +70,11 @@ def main():
 
     print("div: {} \n err: {}".format(divergences, errors))
 
-    plt.plot(divergences, errors, linestyle='--', marker='o', color='b')
+    plt.scatter(divergences, errors, 'g^')
     plt.xlabel("Confidence JSD")
     plt.ylabel("Angular error")
     plt.show()
-    plt.savefig(os.path.join("test", "adv_lambda.png"), bbox_inches='tight')
+    plt.savefig(os.path.join("test", "seeds_variance.png"), bbox_inches='tight')
 
     print("\n *** AVERAGE ACROSS FOLDS *** \n")
     metrics, metrics_adv = evaluator.compute_metrics(), evaluator_adv.compute_metrics()

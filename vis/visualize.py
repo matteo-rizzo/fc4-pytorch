@@ -20,7 +20,7 @@ NUM_SAMPLES = 10
 NUM_FOLDS = 1
 
 # Where to save the generated visualizations
-PATH_TO_SAVED = os.path.join("", "plots", "adv_cc_train_10_samples_{}".format(time.time()))
+PATH_TO_SAVED = os.path.join("vis", "plots", "cc_train_binary_confidence_{}".format(time.time()))
 
 
 def main():
@@ -32,7 +32,7 @@ def main():
         test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
         dataloader = DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
 
-        path_to_pretrained = os.path.join("../trained_models", "fc4_adv", "fold_{}".format(num_fold), "model_adv.pth")
+        path_to_pretrained = os.path.join("trained_models", "fc4_cwp", "fold_{}".format(num_fold), "model.pth")
         model.load(path_to_pretrained)
         model.evaluation_mode()
 
@@ -59,6 +59,11 @@ def main():
 
                 scaled_rgb = rescale(rgb, size).squeeze(0).permute(1, 2, 0)
                 scaled_confidence = rescale(confidence, size).squeeze(0).permute(1, 2, 0)
+
+                # ------------------------------------------------------------------------------------------
+                x, y = torch.ones_like(scaled_confidence), torch.zeros_like(scaled_confidence)
+                scaled_confidence = torch.where(scaled_confidence > scaled_confidence.mean().item(), x, y)
+                # ------------------------------------------------------------------------------------------
 
                 weighted_est = scale(rgb * confidence)
                 scaled_weighted_est = rescale(weighted_est, size).squeeze().permute(1, 2, 0)

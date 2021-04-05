@@ -16,7 +16,7 @@ source venv/bin/activate
 # export PYTHONPATH=$PYTHONPATH:~/projects/def-conati/marizzo/xai/pytorch-fc4
 export PYTHONPATH=$PYTHONPATH:~/home/matteo/Projects/pytorch-fc4
 
-python3 train/train_adv.py --epochs 1 --adv_lambda 0.00005 || exit
-python3 train/train_adv.py --epochs 1 --adv_lambda 0.0005 || exit
-python3 train/train_adv.py --epochs 1 --adv_lambda 0.005 || exit
-python3 train/train_adv.py --epochs 1 --adv_lambda 0.05 || exit
+python3 train/train_adv.py --epochs 1000 --adv_lambda 0.00005 || exit
+python3 train/train_adv.py --epochs 1000 --adv_lambda 0.0005 || exit
+python3 train/train_adv.py --epochs 1000 --adv_lambda 0.005 || exit
+python3 train/train_adv.py --epochs 1000 --adv_lambda 0.05 || exit
