@@ -15,7 +15,7 @@ class ModelAdvConfFC4:
 
     def __init__(self, adv_lambda: float = 0.00005):
         self.__device = DEVICE
-        self.__adv_lambda = adv_lambda
+        self.__adv_lambda = torch.Tensor([adv_lambda]).to(self.__device)
         self.__optimizer = None
         self.__network = FC4().to(self.__device)
         self.__network_adv = FC4().to(self.__device)
@@ -30,21 +30,18 @@ class ModelAdvConfFC4:
         """
         return self.__network(img), self.__network_adv(img)
 
-    def optimize(self, img: Tensor, label: Tensor) -> float:
+    def optimize(self, img: Tensor) -> Tuple:
         self.__optimizer.zero_grad()
         (pred, _, confidence), (pred_adv, _, confidence_adv) = self.predict(img)
-        loss = self.get_adv_loss(pred_adv, label, confidence, confidence_adv)
+        loss = self.get_adv_loss(pred, pred_adv, confidence, confidence_adv)
         loss.backward()
         self.__optimizer.step()
-        return loss.item()
+        return pred, pred_adv, loss.item()
 
-    def get_adv_loss(self, pred: Tensor, label: Tensor, c1: Tensor, c2: Tensor) -> Tensor:
-        alpha = torch.Tensor([self.__adv_lambda]).to(self.__device)
-        angular_loss = self.get_angular_loss(pred, label)
-        kl_loss = self.get_kl_loss(c1, c2)
-        return angular_loss - alpha * kl_loss
+    def get_adv_loss(self, p1: Tensor, p2: Tensor, c1: Tensor, c2: Tensor) -> Tensor:
+        return self.get_angular_loss(p1, p2) - self.__adv_lambda * self.kl_loss(c1, c2)
 
-    def get_kl_loss(self, c1: Tensor, c2: Tensor):
+    def kl_loss(self, c1: Tensor, c2: Tensor):
         return self.__kl_loss(scale(c1), scale(c2)).to(self.__device)
 
     @staticmethod

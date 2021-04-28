@@ -104,9 +104,17 @@ def angular_error(x: Tensor, y: Tensor, safe_v: float = 0.999999) -> Tensor:
     return torch.mean(angle).item()
 
 
+def tvd(pred: Tensor, label: Tensor) -> Tensor:
+    """
+    Total Variation Distance (TVD) is a distance measure for probability distributions
+    https://en.wikipedia.org/wiki/Total_variation_distance_of_probability_measures
+    """
+    return (Tensor([0.5]) * torch.abs(pred - label)).sum()
+
+
 def jsd(p: List, q: List) -> float:
     """
-    Jensen-Shannon Divergence (JSD) between two proability distributions as square of scipy's JS distance. Refs:
+    Jensen-Shannon Divergence (JSD) between two probability distributions as square of scipy's JS distance. Refs:
     - https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.jensenshannon.html
     - https://stackoverflow.com/questions/15880133/jensen-shannon-divergence
     """

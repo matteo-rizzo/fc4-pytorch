@@ -1,14 +1,15 @@
 import os
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch.utils.data
 from torch.utils.data import DataLoader
 
-from auxiliary.settings import DEVICE
+from auxiliary.settings import DEVICE, make_deterministic
 from auxiliary.utils import angular_error, jsd, scale
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
-from classes.fc4.ModelTwinAdvConfFC4 import ModelAdvConfFC4
+from classes.fc4.ModelAdvConfFC4 import ModelAdvConfFC4
 from classes.training.Evaluator import Evaluator
 
 NUM_FOLD = 0
@@ -61,8 +62,11 @@ def main():
     print("\n *** Fold {} - Test set size: {} *** \n".format(NUM_FOLD, len(test_set)))
 
     base_path_to_pretrained = os.path.join(PATH_TO_PRETRAINED, "adv", "fold_{}".format(NUM_FOLD))
-    for model_dir in sorted(os.listdir(base_path_to_pretrained)):
-        print("\n -> Lambda: {}".format("0." + model_dir.split("L")[1]))
+    model_dirs = os.listdir(base_path_to_pretrained)
+    lambdas = sorted([float("0." + model_dir.split("L")[1]) for model_dir in model_dirs])
+    model_dirs = sorted(zip(model_dirs, lambdas), key=lambda x: x[1])
+    for i, (model_dir, l) in enumerate(model_dirs):
+        print("\n -> [ {}/{} ] Lambda: {}".format(i + 1, len(model_dirs), l))
 
         path_to_pretrained = os.path.join(base_path_to_pretrained, model_dir)
         print("\n Using pretrained model stored at: {} \n".format(path_to_pretrained))
@@ -74,9 +78,13 @@ def main():
         adv_data["errors"].append(err)
         adv_data["divergences"].append(div)
 
+    seeds = []
     base_path_to_pretrained = os.path.join(PATH_TO_PRETRAINED, "variance", "fold_{}".format(NUM_FOLD))
-    for model_dir in sorted(os.listdir(base_path_to_pretrained)):
-        print("\n -> Seed: {}".format(model_dir.split("_")[1]))
+    model_dirs = sorted(os.listdir(base_path_to_pretrained))
+    for i, model_dir in enumerate(model_dirs):
+        s = model_dir.split("_")[1]
+        print("\n -> [ {}/{} ] Seed: {}".format(i + 1, len(model_dirs), s))
+        seeds.append(s)
 
         path_to_pretrained = os.path.join(base_path_to_pretrained, model_dir)
         print("\n Using pretrained model stored at: {} \n".format(path_to_pretrained))
@@ -89,12 +97,22 @@ def main():
         var_data["divergences"].append(div)
 
     plt.plot(adv_data["divergences"], adv_data["errors"], linestyle='--', marker='o', color='r')
+    for i, l in enumerate(lambdas):
+        plt.annotate(l, (adv_data["divergences"][i], adv_data["errors"][i]))
+
     plt.scatter(var_data["divergences"], var_data["errors"], marker='^', color='g')
+    for i, s in enumerate(seeds):
+        plt.annotate(s, (var_data["divergences"][i], var_data["errors"][i]))
+
     plt.xlabel("Confidence JSD")
     plt.ylabel("Predictions AE")
-    plt.savefig(os.path.join("test", "adv.png"), bbox_inches='tight')
+
+    path_to_save = os.path.join("test", "results")
+    os.makedirs(path_to_save, exist_ok=True)
+    plt.savefig(os.path.join(path_to_save, "adv_{}.png".format(time.time())), bbox_inches='tight')
     plt.show()
 
 
 if __name__ == '__main__':
+    make_deterministic(seed=1)
     main()
