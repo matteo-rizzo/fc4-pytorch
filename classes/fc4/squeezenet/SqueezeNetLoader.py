@@ -1,3 +1,5 @@
+import os
+
 from torch.utils import model_zoo
 
 from classes.fc4.squeezenet.SqueezeNet import SqueezeNet
@@ -19,5 +21,8 @@ class SqueezeNetLoader:
         @param pretrained: if True, returns a model pre-trained on ImageNet
         """
         if pretrained:
+            path_to_local = os.path.join("assets", "pretrained")
+            print("\n Loading local model at: {} \n".format(path_to_local))
+            os.environ['TORCH_HOME'] = path_to_local
             self.__model.load_state_dict(model_zoo.load_url(model_urls[self.__version]))
         return self.__model
