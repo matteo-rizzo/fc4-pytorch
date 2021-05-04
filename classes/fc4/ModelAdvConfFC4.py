@@ -64,8 +64,10 @@ class ModelAdvConfFC4:
         self.__network = self.__network.eval()
         self.__network_adv = self.__network_adv.eval()
 
-    def save(self, path_to_log: str):
+    def save_base(self, path_to_log: str):
         torch.save(self.__network.state_dict(), os.path.join(path_to_log, "model.pth"))
+
+    def save(self, path_to_log: str):
         torch.save(self.__network_adv.state_dict(), os.path.join(path_to_log, "model_adv.pth"))
 
     def load_base(self, path_to_pretrained: str):

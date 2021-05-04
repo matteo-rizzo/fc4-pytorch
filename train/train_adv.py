@@ -15,14 +15,11 @@ from classes.training.LossTracker import LossTracker
 RANDOM_SEED = 0
 EPOCHS = 1000
 BATCH_SIZE = 1
-LEARNING_RATE = 0.00003
+LEARNING_RATE = 0.0003
 ADV_LAMBDA = 0.00005
 FOLD_NUM = 0
 
 PATH_TO_BASE_MODEL = os.path.join("trained_models", "adv", "base", "fold_{}".format(FOLD_NUM))
-
-RELOAD_CHECKPOINT = False
-PATH_TO_CHECKPOINT = os.path.join("trained_models", "fold_{}".format(FOLD_NUM))
 
 
 def main(opt):
@@ -32,7 +29,7 @@ def main(opt):
     learning_rate = opt.lr
     adv_lambda = opt.adv_lambda
 
-    path_to_log = os.path.join("logs", "adv_fold_{}_{}".format(str(fold_num), str(time.time())))
+    path_to_log = os.path.join("logs", "adv_{}_fold_{}_{}".format(str(opt.adv_lambda), str(fold_num), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
 
     path_to_metrics = os.path.join(path_to_log, "metrics.csv")
@@ -40,21 +37,18 @@ def main(opt):
     model = ModelAdvConfFC4(adv_lambda)
     print("\n Loading base model at: {} \n".format(PATH_TO_BASE_MODEL))
     model.load_base(PATH_TO_BASE_MODEL)
-
-    if RELOAD_CHECKPOINT:
-        print('\n Reloading checkpoint - pretrained model stored at: {} \n'.format(PATH_TO_CHECKPOINT))
-        model.load(PATH_TO_CHECKPOINT)
+    model.save_base(path_to_log)
 
     model.print_network()
     model.log_network(path_to_log)
     model.set_optimizer(learning_rate)
 
     training_set = ColorCheckerDataset(train=True, folds_num=fold_num)
-    training_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True, num_workers=20, drop_last=True)
+    training_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True, num_workers=16, drop_last=True)
     print("\n Training set size ... : {}".format(len(training_set)))
 
     test_set = ColorCheckerDataset(train=False, folds_num=fold_num)
-    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=20, drop_last=True)
+    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=16, drop_last=True)
     print(" Test set size ....... : {}\n".format(len(test_set)))
 
     print("\n**************************************************************")

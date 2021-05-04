@@ -40,7 +40,7 @@ def main():
         dataloader = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
 
         # Edit this path to point to the trained model to be tested
-        path_to_pretrained = os.path.join("../trained_models", MODEL_TYPE, "fold_{}".format(num_fold), "model.pth")
+        path_to_pretrained = os.path.join("trained_models", MODEL_TYPE, "fold_{}".format(num_fold), "model.pth")
         model.load(path_to_pretrained)
         model.evaluation_mode()
 
@@ -64,6 +64,7 @@ def main():
         print(" Best 25% ........ : {:.4f}".format(metrics["bst25"]))
         print(" Worst 25% ....... : {:.4f}".format(metrics["wst25"]))
         print(" Percentile 95 ... : {:.4f} \n".format(metrics["wst5"]))
+        exit()
 
     print("\n *** AVERAGE ACROSS FOLDS *** \n")
     metrics = evaluator.compute_metrics()

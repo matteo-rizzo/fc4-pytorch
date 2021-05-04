@@ -1,6 +1,6 @@
 import math
 import os
-from typing import Union, List
+from typing import Union, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -69,7 +69,8 @@ def linear_to_nonlinear(img: Union[np.array, Image, Tensor]) -> Union[np.array, 
 
 
 def normalize(img: np.ndarray) -> np.ndarray:
-    return np.clip(img, 0.0, 65535.0) * (1.0 / 65535)
+    max_int = 65535.0
+    return np.clip(img, 0.0, max_int) * (1.0 / max_int)
 
 
 def rgb_to_bgr(x: np.ndarray) -> np.ndarray:
@@ -92,7 +93,7 @@ def scale(x: Tensor) -> Tensor:
     return x
 
 
-def rescale(x: Tensor, size: tuple) -> Tensor:
+def rescale(x: Tensor, size: Tuple) -> Tensor:
     """ Rescale tensor to image size for better visualization """
     return interpolate(x, size, mode='bilinear')
 
