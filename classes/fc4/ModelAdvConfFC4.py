@@ -17,9 +17,10 @@ class ModelAdvConfFC4:
         self.__device = DEVICE
         self.__adv_lambda = torch.Tensor([adv_lambda]).to(self.__device)
         self.__optimizer = None
-        self.__network = FC4().to(self.__device)
+        self.__network_base = FC4().to(self.__device)
         self.__network_adv = FC4().to(self.__device)
         self.__kl_loss = torch.nn.KLDivLoss(size_average=None, reduce=None, reduction='sum').to(self.__device)
+        self.__eps = torch.Tensor([0.0000001])
 
     def predict(self, img: Tensor) -> Tuple:
         """
@@ -28,21 +29,24 @@ class ModelAdvConfFC4:
         @return: the colour estimate as a Tensor. If "return_steps" is set to true, the per-path colour estimates and
         the confidence weights are also returned (used for visualizations)
         """
-        return self.__network(img), self.__network_adv(img)
+        return self.__network_base(img), self.__network_adv(img)
 
     def optimize(self, img: Tensor) -> Tuple:
         self.__optimizer.zero_grad()
-        (pred, _, confidence), (pred_adv, _, confidence_adv) = self.predict(img)
-        loss = self.get_adv_loss(pred, pred_adv, confidence, confidence_adv)
+        (pred_base, _, conf_base), (pred_adv, _, conf_adv) = self.predict(img)
+        loss, angular_loss, kl_loss = self.get_losses(conf_base, conf_adv, pred_base, pred_adv)
         loss.backward()
         self.__optimizer.step()
-        return pred, pred_adv, loss.item()
+        return pred_base, pred_adv, loss.item(), angular_loss.item(), kl_loss.item()
 
-    def get_adv_loss(self, p1: Tensor, p2: Tensor, c1: Tensor, c2: Tensor) -> Tensor:
-        return self.get_angular_loss(p1, p2) - self.__adv_lambda * self.kl_loss(c1, c2)
+    def get_losses(self, conf_base: Tensor, conf_adv: Tensor, pred_base: Tensor, pred_adv: Tensor) -> Tuple:
+        angular_loss = self.get_angular_loss(pred_base, pred_adv)
+        kl_loss = self.get_kl_loss(conf_base, conf_adv)
+        loss = angular_loss - self.__adv_lambda * kl_loss
+        return loss, angular_loss, kl_loss
 
-    def kl_loss(self, c1: Tensor, c2: Tensor):
-        return self.__kl_loss(scale(c1), scale(c2)).to(self.__device)
+    def get_kl_loss(self, c1: Tensor, c2: Tensor) -> Tensor:
+        return self.__kl_loss((scale(c1) + self.__eps).log(), scale(c2) + self.__eps).to(self.__device)
 
     @staticmethod
     def get_angular_loss(pred: Tensor, label: Tensor, safe_v: float = 0.999999) -> Tensor:
@@ -51,34 +55,28 @@ class ModelAdvConfFC4:
         return torch.mean(angle)
 
     def print_network(self):
-        print(self.__network)
+        print(self.__network_base)
 
     def log_network(self, path_to_log: str):
-        open(os.path.join(path_to_log, "network.txt"), 'a+').write(str(self.__network))
+        open(os.path.join(path_to_log, "network.txt"), 'a+').write(str(self.__network_base))
 
     def train_mode(self):
-        self.__network = self.__network.train()
+        self.__network_base = self.__network_base.train()
         self.__network_adv = self.__network_adv.train()
 
     def evaluation_mode(self):
-        self.__network = self.__network.eval()
+        self.__network_base = self.__network_base.eval()
         self.__network_adv = self.__network_adv.eval()
 
     def save_base(self, path_to_log: str):
-        torch.save(self.__network.state_dict(), os.path.join(path_to_log, "model.pth"))
+        torch.save(self.__network_base.state_dict(), os.path.join(path_to_log, "model.pth"))
 
-    def save(self, path_to_log: str):
+    def save_adv(self, path_to_log: str):
         torch.save(self.__network_adv.state_dict(), os.path.join(path_to_log, "model_adv.pth"))
 
     def load_base(self, path_to_pretrained: str):
         path_to_model = os.path.join(path_to_pretrained, "model.pth")
-        self.__network.load_state_dict(torch.load(path_to_model, map_location=self.__device))
-
-    def load(self, path_to_pretrained: str):
-        path_to_model = os.path.join(path_to_pretrained, "model.pth")
-        self.__network.load_state_dict(torch.load(path_to_model, map_location=self.__device))
-        path_to_model_adv = os.path.join(path_to_pretrained, "model_adv.pth")
-        self.__network_adv.load_state_dict(torch.load(path_to_model_adv, map_location=self.__device))
+        self.__network_base.load_state_dict(torch.load(path_to_model, map_location=self.__device))
 
     def set_optimizer(self, learning_rate: float, optimizer_type: str = "sgd"):
         optimizers_map = {"adam": torch.optim.Adam, "rmsprop": torch.optim.RMSprop, "sgd": torch.optim.SGD}

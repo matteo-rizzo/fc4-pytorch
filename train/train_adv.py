@@ -55,8 +55,8 @@ def main(opt):
     print("\t\t\t Training FC4 - Fold {}".format(fold_num))
     print("**************************************************************\n")
 
-    evaluator, evaluator_adv = Evaluator(), Evaluator()
-    best_val_loss, best_metrics = 100.0, evaluator.get_best_metrics()
+    evaluator_base, evaluator_adv = Evaluator(), Evaluator()
+    best_val_loss, best_metrics = 100.0, evaluator_base.get_best_metrics()
     train_loss, val_loss = LossTracker(), LossTracker()
 
     for epoch in range(epochs):
@@ -67,15 +67,17 @@ def main(opt):
 
         for i, (img, label, _) in enumerate(training_loader):
             img, label = img.to(DEVICE), label.to(DEVICE)
-            pred, pred_adv, loss = model.optimize(img)
+            pred_base, pred_adv, loss, angular_loss, kl_loss = model.optimize(img)
             train_loss.update(loss)
 
-            loss_base = model.get_angular_loss(pred, label).item()
-            loss_adv = model.get_angular_loss(pred_adv, label).item()
+            err_base = model.get_angular_loss(pred_base, label).item()
+            err_adv = model.get_angular_loss(pred_adv, label).item()
 
             if i % 5 == 0:
-                print("[ Epoch: {}/{} - Batch: {} ] | [ TL: {:.4f} - LBase: {:.4f} - LAdv: {:.4f} ]"
-                      .format(epoch + 1, epochs, i, loss, loss_base, loss_adv))
+                print("[ Epoch: {}/{} - Batch: {} ]"
+                      " | Loss: [ Train: {:.4f} - Angular: {:.4f} - KL: {:.4f} ]"
+                      " | Error: [ Base: {:.4f} - Adv: {:.4f} ]"
+                      .format(epoch + 1, epochs, i, loss, angular_loss, kl_loss, err_base, err_adv))
 
         train_time = time.time() - start
 
@@ -83,7 +85,7 @@ def main(opt):
         start = time.time()
 
         if epoch % 5 == 0:
-            evaluator.reset_errors()
+            evaluator_base.reset_errors()
             evaluator_adv.reset_errors()
             model.evaluation_mode()
 
@@ -94,25 +96,28 @@ def main(opt):
             with torch.no_grad():
                 for i, (img, label, _) in enumerate(test_loader):
                     img, label = img.to(DEVICE), label.to(DEVICE)
-                    (pred, _, confidence), (pred_adv, _, confidence_adv) = model.predict(img)
-                    loss = model.get_adv_loss(pred, pred_adv, confidence, confidence_adv).item()
+                    (pred_base, _, conf_base), (pred_adv, _, conf_adv) = model.predict(img)
+                    loss, angular_loss, kl_loss = model.get_losses(conf_base, conf_adv, pred_base, pred_adv)
+                    loss, angular_loss, kl_loss = loss.item(), angular_loss.item(), kl_loss.item()
                     val_loss.update(loss)
 
-                    loss_base = model.get_angular_loss(pred, label).item()
-                    evaluator.add_error(loss_base)
+                    err_base = model.get_angular_loss(pred_base, label).item()
+                    err_adv = model.get_angular_loss(pred_adv, label).item()
 
-                    loss_adv = model.get_angular_loss(pred_adv, label).item()
-                    evaluator_adv.add_error(loss_adv)
+                    evaluator_base.add_error(err_base)
+                    evaluator_adv.add_error(err_adv)
 
                     if i % 5 == 0:
-                        print("[ Epoch: {}/{} - Batch: {} ] | [ VL: {:.4f} - LBase: {:.4f} - LAdv: {:.4f} ]"
-                              .format(epoch + 1, epochs, i, loss, loss_base, loss_adv))
+                        print("[ Epoch: {}/{} - Batch: {} ]"
+                              " | Loss: [ Train: {:.4f} - Angular: {:.4f} - KL: {:.4f} ]"
+                              " | Error: [ Base: {:.4f} - Adv: {:.4f} ]"
+                              .format(epoch + 1, epochs, i, loss, angular_loss, kl_loss, err_base, err_adv))
 
             print("\n--------------------------------------------------------------\n")
 
         val_time = time.time() - start
 
-        metrics, metrics_adv = evaluator.compute_metrics(), evaluator_adv.compute_metrics()
+        metrics_base, metrics_adv = evaluator_base.compute_metrics(), evaluator_adv.compute_metrics()
         print("\n********************************************************************")
         print(" Train Time ........ : {:.4f}".format(train_time))
         print(" Train Loss ........ : {:.4f}".format(train_loss.avg))
@@ -122,26 +127,26 @@ def main(opt):
             print(" Val Loss ......... : {:.4f}".format(val_loss.avg))
             print("....................................................................")
             print(" Mean ......... : {:.4f} (Best: {:.4f} - Base: {:.4f})"
-                  .format(metrics_adv["mean"], best_metrics["mean"], metrics["mean"]))
+                  .format(metrics_adv["mean"], best_metrics["mean"], metrics_base["mean"]))
             print(" Median ....... : {:.4f} (Best: {:.4f} - Base: {:.4f}))"
-                  .format(metrics_adv["median"], best_metrics["median"], metrics["median"]))
+                  .format(metrics_adv["median"], best_metrics["median"], metrics_base["median"]))
             print(" Trimean ...... : {:.4f} (Best: {:.4f} - Base: {:.4f}))"
-                  .format(metrics_adv["trimean"], best_metrics["trimean"], metrics["trimean"]))
+                  .format(metrics_adv["trimean"], best_metrics["trimean"], metrics_base["trimean"]))
             print(" Best 25% ..... : {:.4f} (Best: {:.4f} - Base: {:.4f}))"
-                  .format(metrics_adv["bst25"], best_metrics["bst25"], metrics["bst25"]))
+                  .format(metrics_adv["bst25"], best_metrics["bst25"], metrics_base["bst25"]))
             print(" Worst 25% .... : {:.4f} (Best: {:.4f} - Base: {:.4f}))"
-                  .format(metrics_adv["wst25"], best_metrics["wst25"], metrics["wst25"]))
+                  .format(metrics_adv["wst25"], best_metrics["wst25"], metrics_base["wst25"]))
             print(" Worst 5% ..... : {:.4f} (Best: {:.4f} - Base: {:.4f}))"
-                  .format(metrics_adv["wst5"], best_metrics["wst5"], metrics["wst5"]))
+                  .format(metrics_adv["wst5"], best_metrics["wst5"], metrics_base["wst5"]))
         print("********************************************************************\n")
 
         if 0 < val_loss.avg < best_val_loss:
             best_val_loss = val_loss.avg
-            best_metrics = evaluator.update_best_metrics()
+            best_metrics = evaluator_adv.update_best_metrics()
             print("Saving new best models... \n")
-            model.save(path_to_log)
+            model.save_adv(path_to_log)
 
-        log_metrics(train_loss.avg, val_loss.avg, metrics, best_metrics, path_to_metrics)
+        log_metrics(train_loss.avg, val_loss.avg, metrics_adv, best_metrics, path_to_metrics)
 
 
 if __name__ == '__main__':
