@@ -16,7 +16,7 @@ RANDOM_SEED = 0
 EPOCHS = 1000
 BATCH_SIZE = 1
 LEARNING_RATE = 0.0003
-ADV_LAMBDA = 0.00005
+ADV_LAMBDA = 0.05
 FOLD_NUM = 0
 
 PATH_TO_BASE_MODEL = os.path.join("trained_models", "adv", "base", "fold_{}".format(FOLD_NUM))
@@ -31,6 +31,9 @@ def main(opt):
 
     path_to_log = os.path.join("logs", "adv_{}_fold_{}_{}".format(str(opt.adv_lambda), str(fold_num), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
+
+    path_to_vis = os.path.join(path_to_log, "vis")
+    os.makedirs(path_to_vis, exist_ok=True)
 
     path_to_metrics = os.path.join(path_to_log, "metrics.csv")
 
@@ -65,19 +68,26 @@ def main(opt):
         train_loss.reset()
         start = time.time()
 
-        for i, (img, label, _) in enumerate(training_loader):
+        for i, (img, label, filename) in enumerate(training_loader):
             img, label = img.to(DEVICE), label.to(DEVICE)
-            pred_base, pred_adv, loss, angular_loss, kl_loss = model.optimize(img)
+            (pred_base, _, conf_base), (pred_adv, _, conf_adv) = model.predict(img)
+            loss, losses = model.optimize(pred_base, pred_adv, conf_base, conf_adv)
             train_loss.update(loss)
 
             err_base = model.get_angular_loss(pred_base, label).item()
             err_adv = model.get_angular_loss(pred_adv, label).item()
 
             if i % 5 == 0:
-                print("[ Epoch: {}/{} - Batch: {} ]"
-                      " | Loss: [ Train: {:.4f} - Angular: {:.4f} - KL: {:.4f} ]"
-                      " | Error: [ Base: {:.4f} - Adv: {:.4f} ]"
-                      .format(epoch + 1, epochs, i, loss, angular_loss, kl_loss, err_base, err_adv))
+                loss_log = " - ".join(["{}: {:.4f}".format(lt, lv.item()) for lt, lv in losses.items()])
+                print("[ Epoch: {}/{} - Batch: {} ] "
+                      "| Loss: [ train: {:.4f} - {} ] "
+                      "| Error: [ base: {:.4f} - adv: {:.4f} ]"
+                      .format(epoch + 1, epochs, i, loss, loss_log, err_base, err_adv))
+
+        if epoch % 50 == 0:
+            path_to_save = os.path.join(path_to_vis, "epoch_{}".format(epoch))
+            print("\n Saving vis at: {} \n".format(path_to_save))
+            model.save_vis(img, conf_base, conf_adv, path_to_save)
 
         train_time = time.time() - start
 
@@ -97,8 +107,8 @@ def main(opt):
                 for i, (img, label, _) in enumerate(test_loader):
                     img, label = img.to(DEVICE), label.to(DEVICE)
                     (pred_base, _, conf_base), (pred_adv, _, conf_adv) = model.predict(img)
-                    loss, angular_loss, kl_loss = model.get_losses(conf_base, conf_adv, pred_base, pred_adv)
-                    loss, angular_loss, kl_loss = loss.item(), angular_loss.item(), kl_loss.item()
+                    loss, losses = model.get_losses(conf_base, conf_adv, pred_base, pred_adv)
+                    loss = loss.item()
                     val_loss.update(loss)
 
                     err_base = model.get_angular_loss(pred_base, label).item()
@@ -108,10 +118,11 @@ def main(opt):
                     evaluator_adv.add_error(err_adv)
 
                     if i % 5 == 0:
-                        print("[ Epoch: {}/{} - Batch: {} ]"
-                              " | Loss: [ Train: {:.4f} - Angular: {:.4f} - KL: {:.4f} ]"
-                              " | Error: [ Base: {:.4f} - Adv: {:.4f} ]"
-                              .format(epoch + 1, epochs, i, loss, angular_loss, kl_loss, err_base, err_adv))
+                        loss_log = " - ".join(["{}: {:.4f}".format(lt, lv.item()) for lt, lv in losses.items()])
+                        print("[ Epoch: {}/{} - Batch: {} ] "
+                              "| Loss: [ val: {:.4f} - {} ] "
+                              "| Error: [ base: {:.4f} - adv: {:.4f} ]"
+                              .format(epoch + 1, epochs, i, loss, loss_log, err_base, err_adv))
 
             print("\n--------------------------------------------------------------\n")
 
