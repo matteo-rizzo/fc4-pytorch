@@ -55,17 +55,15 @@ class ModelAdvConfFC4:
         loss = losses["angular"] + self.__adv_lambda * (losses["ssim"] + losses["iou"] + losses["complementary"])
         return loss, losses
 
-    @staticmethod
-    def get_iou_loss(c1: Tensor, c2: Tensor, eps: float = 0.00000001) -> Tensor:
+    def get_iou_loss(self, c1: Tensor, c2: Tensor) -> Tensor:
         c1, c2 = c1.int(), c2.int()
-        intersection = (c1 & c2).float().sum((1, 2))
-        union = (c1 | c2).float().sum((1, 2))
-        return torch.mean((intersection + eps) / (union + eps))
+        intersection = (c1 & c2).float().sum((1, 2)).to(self.__device)
+        union = (c1 | c2).float().sum((1, 2)).to(self.__device)
+        return torch.mean((intersection + self.__eps) / (union + self.__eps)).to(self.__device)
 
-    @staticmethod
-    def get_complementary_loss(c1: Tensor, c2: Tensor) -> Tensor:
+    def get_complementary_loss(self, c1: Tensor, c2: Tensor) -> Tensor:
         """ https://ieeexplore.ieee.org/document/9380693 """
-        return torch.norm(torch.Tensor([1]) - scale(c1) + scale(c2), p=1)
+        return torch.norm(torch.Tensor([1]).to(self.__device) - scale(c1) + scale(c2), p=1).to(self.__device)
 
     def get_ssim_loss(self, c1: Tensor, c2: Tensor) -> Tensor:
         return self.__ssim_loss(scale(c1), scale(c2)).to(self.__device)
