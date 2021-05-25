@@ -25,14 +25,11 @@ FOLD_NUM = 0
 TEST_VIS_IMG = []
 
 RELOAD_CHECKPOINT = False
-PATH_TO_PTH_CHECKPOINT = os.path.join("../trained_models", "fold_{}".format(FOLD_NUM), "model.pth")
+PATH_TO_PTH_CHECKPOINT = os.path.join("../trained_models", "fold_{}".format(FOLD_NUM))
 
 
 def main(opt):
-    fold_num = opt.fold_num
-    epochs = opt.epochs
-    batch_size = opt.batch_size
-    learning_rate = opt.lr
+    fold_num, epochs, batch_size, lr = opt.fold_num, opt.epochs, opt.batch_size, opt.lr
 
     path_to_log = os.path.join("logs", "fold_{}_{}".format(str(fold_num), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
@@ -46,7 +43,7 @@ def main(opt):
 
     model.print_network()
     model.log_network(path_to_log)
-    model.set_optimizer(learning_rate)
+    model.set_optimizer(lr)
 
     training_set = ColorCheckerDataset(train=True, folds_num=fold_num)
     training_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True, num_workers=20, drop_last=True)
@@ -99,23 +96,19 @@ def main(opt):
             with torch.no_grad():
                 for i, (img, label, file_name) in enumerate(test_loader):
                     img, label = img.to(DEVICE), label.to(DEVICE)
-                    img_id = file_name[0].split(".")[0]
-
-                    if USE_CONFIDENCE_WEIGHTED_POOLING:
-                        pred, rgb, confidence = model.predict(img, return_steps=True)
-                        loss = model.get_regularized_loss(pred, label, confidence).item()
-                        if img_id in TEST_VIS_IMG:
-                            model.save_vis({"img": img, "label": label, "pred": pred, "rgb": rgb, "c": confidence},
-                                           os.path.join(path_to_vis, img_id, "epoch_{}.png".format(epoch)))
-                    else:
-                        pred = model.predict(img)
-                        loss = model.get_angular_loss(pred, label).item()
-
+                    pred, rgb, confidence = model.predict(img, return_steps=True)
+                    loss = model.get_loss(pred, label).item()
                     val_loss.update(loss)
-                    evaluator.add_error(model.get_angular_loss(pred, label).item())
+                    evaluator.add_error(model.get_loss(pred, label).item())
 
                     if i % 5 == 0:
                         print("[ Epoch: {}/{} - Batch: {}] | Val loss: {:.4f} ]".format(epoch, epochs, i, loss))
+
+                    img_id = file_name[0].split(".")[0]
+                    if USE_CONFIDENCE_WEIGHTED_POOLING:
+                        if img_id in TEST_VIS_IMG:
+                            model.save_vis({"img": img, "label": label, "pred": pred, "rgb": rgb, "c": confidence},
+                                           os.path.join(path_to_vis, img_id, "epoch_{}.png".format(epoch)))
 
             print("\n--------------------------------------------------------------\n")
 
@@ -137,7 +130,7 @@ def main(opt):
             best_val_loss = val_loss.avg
             best_metrics = evaluator.update_best_metrics()
             print("Saving new best model... \n")
-            model.save(os.path.join(path_to_log, "model.pth"))
+            model.save(path_to_log)
 
         log_metrics(train_loss.avg, val_loss.avg, metrics, best_metrics, path_to_metrics_log)
 

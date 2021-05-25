@@ -14,14 +14,14 @@ from classes.fc4.ModelFC4 import ModelFC4
 from classes.training.Evaluator import Evaluator
 
 # Set to -1 to process all the samples in the test set of the current fold
-NUM_SAMPLES = 1
+NUM_SAMPLES = -1
 
 # The number of folds to be processed (either 1, 2 or 3)
 NUM_FOLDS = 1
 
 # Where to save the generated visualizations
 # PATH_TO_SAVED = os.path.join("vis", "plots", "cc_train_binary_confidence_{}".format(time.time()))
-PATH_TO_SAVED = os.path.join("vis", "plots", "cc_train_base_tvbs_{}".format(time.time()))
+PATH_TO_SAVED = os.path.join("vis", "plots", "tmp_{}".format(time.time()))
 
 
 def main():
@@ -33,8 +33,8 @@ def main():
         test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
         dataloader = DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
 
-        # path_to_pretrained = os.path.join("trained_models", "fc4_cwp", "fold_{}".format(num_fold), "model.pth")
-        path_to_pretrained = os.path.join("trained_models/fc4_cwp_reg_spar_tv/fold_0/model.pth")
+        # path_to_pretrained = os.path.join("trained_models", "baseline", "fc4_cwp", "fold_{}".format(num_fold), "model.pth")
+        path_to_pretrained = os.path.join("trained_models/softmax/fold_0/model.pth")
         model.load(path_to_pretrained)
         model.evaluation_mode()
 
@@ -59,14 +59,23 @@ def main():
 
                 size = original.size[::-1]
 
+                # ------------------------------------------------------------------------------------------
+                # n, c, h, w = confidence.shape
+                # confidence = confidence.view(n, c, h * w)
+                # confidence = torch.nn.functional.softmax(confidence, dim=2)
+                # confidence = confidence.view(n, c, h, w)
+                # ------------------------------------------------------------------------------------------
+
                 scaled_rgb = rescale(rgb, size).squeeze(0).permute(1, 2, 0)
                 scaled_confidence = rescale(confidence, size).squeeze(0).permute(1, 2, 0)
 
                 # ------------------------------------------------------------------------------------------
+                # For clustering
                 # x, y = torch.ones_like(scaled_confidence), torch.zeros_like(scaled_confidence)
                 # scaled_confidence = torch.where(scaled_confidence > scaled_confidence.mean().item(), x, y)
                 # ------------------------------------------------------------------------------------------
 
+                # weighted_est = scale(rgb * confidence)
                 weighted_est = scale(rgb * confidence)
                 scaled_weighted_est = rescale(weighted_est, size).squeeze().permute(1, 2, 0)
 
@@ -104,6 +113,7 @@ def main():
                 path_to_save = os.path.join(PATH_TO_SAVED, "fold_{}".format(num_fold), file_name)
                 os.makedirs(path_to_save)
 
+                # plt.show()
                 fig.savefig(os.path.join(path_to_save, "stages.png"), bbox_inches='tight', dpi=200)
                 original.save(os.path.join(path_to_save, "original.png"))
                 est_corrected.save(os.path.join(path_to_save, "est_corrected.png"))

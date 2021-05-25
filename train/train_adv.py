@@ -5,10 +5,10 @@ import time
 import torch
 from torch.utils.data import DataLoader
 
+from ModelAdvConfFC4 import ModelAdvConfFC4
 from auxiliary.settings import DEVICE, make_deterministic
 from auxiliary.utils import log_metrics
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
-from classes.fc4.ModelAdvConfFC4 import ModelAdvConfFC4
 from classes.training.Evaluator import Evaluator
 from classes.training.LossTracker import LossTracker
 
@@ -23,11 +23,7 @@ PATH_TO_BASE_MODEL = os.path.join("trained_models", "adv", "base", "fold_{}".for
 
 
 def main(opt):
-    fold_num = opt.fold_num
-    epochs = opt.epochs
-    batch_size = opt.batch_size
-    learning_rate = opt.lr
-    adv_lambda = opt.adv_lambda
+    fold_num, epochs, batch_size, lr, adv_lambda = opt.fold_num, opt.epochs, opt.batch_size, opt.lr, opt.adv_lambda
 
     path_to_log = os.path.join("logs", "adv_{}_fold_{}_{}".format(str(opt.adv_lambda), str(fold_num), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
@@ -39,12 +35,13 @@ def main(opt):
 
     model = ModelAdvConfFC4(adv_lambda)
     print("\n Loading base model at: {} \n".format(PATH_TO_BASE_MODEL))
-    model.load_base(PATH_TO_BASE_MODEL)
-    model.save_base(path_to_log)
+    model.load(PATH_TO_BASE_MODEL)
+    print("\n Saving base model at: {} \n".format(path_to_log))
+    model.save(path_to_log)
 
     model.print_network()
     model.log_network(path_to_log)
-    model.set_optimizer(learning_rate)
+    model.set_optimizer(lr)
 
     training_set = ColorCheckerDataset(train=True, folds_num=fold_num)
     training_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True, num_workers=16, drop_last=True)
@@ -55,7 +52,7 @@ def main(opt):
     print(" Test set size ....... : {}\n".format(len(test_set)))
 
     print("\n**************************************************************")
-    print("\t\t\t Training FC4 - Fold {}".format(fold_num))
+    print("\t\t\t Training Adversary FC4 - Fold {}".format(fold_num))
     print("**************************************************************\n")
 
     evaluator_base, evaluator_adv = Evaluator(), Evaluator()
@@ -74,8 +71,8 @@ def main(opt):
             loss, losses = model.optimize(pred_base, pred_adv, conf_base, conf_adv)
             train_loss.update(loss)
 
-            err_base = model.get_angular_loss(pred_base, label).item()
-            err_adv = model.get_angular_loss(pred_adv, label).item()
+            err_base = model.get_loss(pred_base, label).item()
+            err_adv = model.get_loss(pred_adv, label).item()
 
             if i % 5 == 0:
                 loss_log = " - ".join(["{}: {:.4f}".format(lt, lv.item()) for lt, lv in losses.items()])
@@ -111,8 +108,8 @@ def main(opt):
                     loss = loss.item()
                     val_loss.update(loss)
 
-                    err_base = model.get_angular_loss(pred_base, label).item()
-                    err_adv = model.get_angular_loss(pred_adv, label).item()
+                    err_base = model.get_loss(pred_base, label).item()
+                    err_adv = model.get_loss(pred_adv, label).item()
 
                     evaluator_base.add_error(err_base)
                     evaluator_adv.add_error(err_adv)

@@ -8,19 +8,15 @@ from torch.utils.data import DataLoader
 from auxiliary.settings import DEVICE, make_deterministic
 from auxiliary.utils import print_metrics, log_metrics
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
-from classes.fc4.ModelTwinAdvConfFC4 import ModelTwinAdvConfFC4
+from classes.mlp.ModelMLP import ModelMLP
 from classes.training.Evaluator import Evaluator
 from classes.training.LossTracker import LossTracker
 
 RANDOM_SEED = 0
 EPOCHS = 2000
 BATCH_SIZE = 1
-LEARNING_RATE = 0.00001
-ADV_LAMBDA = 0.00005
+LEARNING_RATE = 0.0003
 FOLD_NUM = 0
-
-RELOAD_CHECKPOINT = False
-PATH_TO_CHECKPOINT = os.path.join("trained_models", "fold_{}".format(FOLD_NUM))
 
 
 def main(opt):
@@ -28,20 +24,12 @@ def main(opt):
     epochs = opt.epochs
     batch_size = opt.batch_size
     learning_rate = opt.lr
-    adv_lambda = opt.adv_lambda
 
-    path_to_log = os.path.join("logs", "adv_twin_fold_{}_{}".format(str(fold_num), str(time.time())))
+    path_to_log = os.path.join("logs", "fold_{}_{}".format(str(fold_num), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
+    path_to_metrics_log = os.path.join(path_to_log, "metrics.csv")
 
-    path_to_metrics = os.path.join(path_to_log, "metrics.csv")
-    path_to_metrics_adv = os.path.join(path_to_log, "metrics_adv.csv")
-
-    model = ModelTwinAdvConfFC4(adv_lambda)
-
-    if RELOAD_CHECKPOINT:
-        print('\n Reloading checkpoint - pretrained model stored at: {} \n'.format(PATH_TO_CHECKPOINT))
-        model.load(PATH_TO_CHECKPOINT)
-
+    model = ModelMLP()
     model.print_network()
     model.log_network(path_to_log)
     model.set_optimizer(learning_rate)
@@ -55,42 +43,34 @@ def main(opt):
     print(" Test set size ....... : {}\n".format(len(test_set)))
 
     print("\n**************************************************************")
-    print("\t\t\t Training FC4 - Fold {}".format(fold_num))
+    print("\t\t\t Training MLP - Fold {}".format(fold_num))
     print("**************************************************************\n")
 
     evaluator = Evaluator()
-    evaluator_adv = Evaluator()
     best_val_loss, best_metrics = 100.0, evaluator.get_best_metrics()
-    best_val_loss_adv, best_metrics_adv = 100.0, evaluator.get_best_metrics()
     train_loss, val_loss = LossTracker(), LossTracker()
-    train_loss_adv, val_loss_adv = LossTracker(), LossTracker()
 
     for epoch in range(epochs):
 
         model.train_mode()
         train_loss.reset()
-        train_loss_adv.reset()
         start = time.time()
 
         for i, (img, label, _) in enumerate(training_loader):
             img, label = img.to(DEVICE), label.to(DEVICE)
-            loss, loss_adv = model.optimize(img, label)
+            loss = model.optimize(img, label)
             train_loss.update(loss)
-            train_loss_adv.update(loss_adv)
 
             if i % 5 == 0:
-                print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} - Train loss adv: {:.4f} ]"
-                      .format(epoch + 1, epochs, i, loss, loss_adv))
+                print("[ Epoch: {}/{} - Batch: {} ] | [ Train loss: {:.4f} ]".format(epoch, epochs, i, loss))
 
         train_time = time.time() - start
 
         val_loss.reset()
-        val_loss_adv.reset()
         start = time.time()
 
         if epoch % 5 == 0:
             evaluator.reset_errors()
-            evaluator_adv.reset_errors()
             model.evaluation_mode()
 
             print("\n--------------------------------------------------------------")
@@ -100,52 +80,37 @@ def main(opt):
             with torch.no_grad():
                 for i, (img, label, file_name) in enumerate(test_loader):
                     img, label = img.to(DEVICE), label.to(DEVICE)
-                    img_id = file_name[0].split(".")[0]
-
-                    (pred, rgb, confidence), (pred_adv, rgb_adv, confidence_adv) = model.predict(img)
-                    loss = model.get_angular_loss(pred, label).item()
-                    loss_adv = model.get_angular_loss(pred_adv, label).item()
-
+                    pred = model.predict(img)
+                    loss = model.get_loss(pred, label).item()
                     val_loss.update(loss)
-                    val_loss_adv.update(loss_adv)
-
-                    evaluator.add_error(model.get_angular_loss(pred, label).item())
-                    evaluator_adv.add_error(model.get_angular_loss(pred_adv, label).item())
+                    evaluator.add_error(model.get_loss(pred, label).item())
 
                     if i % 5 == 0:
-                        print("[ Epoch: {}/{} - Batch: {}] | Val loss: {:.4f} - Val loss adv: {:.4f}]"
-                              .format(epoch + 1, epochs, i, loss, loss_adv))
+                        print("[ Epoch: {}/{} - Batch: {}] | Val loss: {:.4f} ]".format(epoch, epochs, i, loss))
 
             print("\n--------------------------------------------------------------\n")
 
         val_time = time.time() - start
 
         metrics = evaluator.compute_metrics()
-        metrics_adv = evaluator_adv.compute_metrics()
         print("\n********************************************************************")
-        print(" Train Time ........ : {:.4f}".format(train_time))
-        print(" Train Loss Base ... : {:.4f}".format(train_loss.avg))
-        print(" Train Loss Adv .... : {:.4f}".format(train_loss_adv.avg))
+        print(" Train Time ... : {:.4f}".format(train_time))
+        print(" Train Loss ... : {:.4f}".format(train_loss.avg))
         if val_time > 0.1:
             print("....................................................................")
-            print(" Val Time ......... : {:.4f}".format(val_time))
-            print(" Val Loss Base .... : {:.4f}".format(val_loss.avg))
-            print(" Val Loss Adv ..... : {:.4f}".format(val_loss.avg))
+            print(" Val Time ..... : {:.4f}".format(val_time))
+            print(" Val Loss ..... : {:.4f}".format(val_loss.avg))
             print("....................................................................")
             print_metrics(metrics, best_metrics)
-            print("....................................................................")
-            print("\n Adversary metrics \n")
-            print_metrics(metrics_adv, best_metrics_adv)
         print("********************************************************************\n")
 
         if 0 < val_loss.avg < best_val_loss:
             best_val_loss = val_loss.avg
             best_metrics = evaluator.update_best_metrics()
-            print("Saving new best models... \n")
-            model.save(path_to_log)
+            print("Saving new best model... \n")
+            model.save(os.path.join(path_to_log, "model.pth"))
 
-        log_metrics(train_loss.avg, val_loss.avg, metrics, best_metrics, path_to_metrics)
-        log_metrics(train_loss_adv.avg, val_loss_adv.avg, metrics_adv, best_metrics_adv, path_to_metrics_adv)
+        log_metrics(train_loss.avg, val_loss.avg, metrics, best_metrics, path_to_metrics_log)
 
 
 if __name__ == '__main__':
@@ -155,7 +120,6 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=BATCH_SIZE)
     parser.add_argument('--random_seed', type=int, default=RANDOM_SEED)
     parser.add_argument('--lr', type=float, default=LEARNING_RATE)
-    parser.add_argument('--adv_lambda', type=float, default=ADV_LAMBDA)
     opt = parser.parse_args()
     make_deterministic(opt.random_seed)
 
@@ -165,6 +129,5 @@ if __name__ == '__main__':
     print("\t Batch size ...... : {}".format(opt.batch_size))
     print("\t Learning rate ... : {}".format(opt.lr))
     print("\t Random seed ..... : {}".format(opt.random_seed))
-    print("\t Adv lambda ...... : {}".format(opt.adv_lambda))
 
     main(opt)

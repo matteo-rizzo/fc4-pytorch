@@ -41,3 +41,7 @@ DEVICE = get_device()
 USE_CONFIDENCE_WEIGHTED_POOLING = True
 if not USE_CONFIDENCE_WEIGHTED_POOLING:
     print("\n WARN: confidence-weighted pooling option is set to False \n")
+
+# Input size
+IMG_W = 512
+IMG_H = 512

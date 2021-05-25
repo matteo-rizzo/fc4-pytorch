@@ -4,6 +4,7 @@ import random
 import cv2
 import numpy as np
 
+from auxiliary.settings import IMG_H, IMG_W
 from auxiliary.utils import rgb_to_bgr
 
 
@@ -11,7 +12,7 @@ class DataAugmenter:
 
     def __init__(self):
         # Input Size of the fully-convolutional network (SqueezeNet)
-        self.__fcn_input_size = (512, 512)
+        self.__fcn_input_size = (IMG_H, IMG_W)
 
         # Rotation angle
         self.__angle = 60
