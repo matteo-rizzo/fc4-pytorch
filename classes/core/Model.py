@@ -3,8 +3,8 @@ import os
 import torch
 from torch import Tensor
 
+from auxiliary.settings import DEVICE
 from classes.losses.AngularLoss import AngularLoss
-from settings import DEVICE
 
 
 class Model:

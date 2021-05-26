@@ -4,7 +4,7 @@ import torch
 from torch import Tensor
 from torch.nn.functional import normalize
 
-from core.Loss import Loss
+from classes.core.Loss import Loss
 
 
 class AngularLoss(Loss):

@@ -108,7 +108,7 @@ def main(opt):
             best_val_loss = val_loss.avg
             best_metrics = evaluator.update_best_metrics()
             print("Saving new best model... \n")
-            model.save(os.path.join(path_to_log, "model.pth"))
+            model.save(path_to_log)
 
         log_metrics(train_loss.avg, val_loss.avg, metrics, best_metrics, path_to_metrics_log)
 

@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 
-from core.Loss import Loss
+from classes.core.Loss import Loss
 
 
 class TotalVariationLoss(Loss):

@@ -1,7 +1,7 @@
 from torch import Tensor
 
+from classes.core.Model import Model
 from classes.mlp.MLP import MLP
-from core.Model import Model
 
 
 class ModelMLP(Model):

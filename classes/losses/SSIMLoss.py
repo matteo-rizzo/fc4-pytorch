@@ -2,7 +2,7 @@ import torch
 from pytorch_msssim import SSIM
 from torch import Tensor
 
-from core.Loss import Loss
+from classes.core.Loss import Loss
 from utils import scale
 
 """ https://github.com/VainF/pytorch-msssim """

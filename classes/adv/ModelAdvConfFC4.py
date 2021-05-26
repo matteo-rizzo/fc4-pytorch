@@ -7,11 +7,11 @@ from torch import Tensor
 from torchvision.transforms import transforms
 
 from auxiliary.utils import rescale
+from classes.core.Model import Model
 from classes.fc4.FC4 import FC4
 from classes.losses.ComplementaryLoss import ComplementaryLoss
 from classes.losses.IoULoss import IoULoss
 from classes.losses.SSIMLoss import SSIMLoss
-from core.Model import Model
 
 
 class ModelAdvConfFC4(Model):

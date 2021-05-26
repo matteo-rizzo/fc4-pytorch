@@ -3,7 +3,7 @@ from torch import Tensor
 from torch.linalg import norm
 from torch.nn.functional import unfold
 
-from core.Loss import Loss
+from classes.core.Loss import Loss
 
 
 class BlockSparsityLoss(Loss):
