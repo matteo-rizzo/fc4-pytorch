@@ -5,9 +5,9 @@ import time
 import torch
 from torch.utils.data import DataLoader
 
-from ModelAdvConfFC4 import ModelAdvConfFC4
 from auxiliary.settings import DEVICE, make_deterministic
 from auxiliary.utils import log_metrics
+from classes.adv.ModelAdvConfFC4 import ModelAdvConfFC4
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.training.Evaluator import Evaluator
 from classes.training.LossTracker import LossTracker

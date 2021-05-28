@@ -1,8 +1,8 @@
 import torch
 from torch import Tensor
 
+from auxiliary.utils import scale
 from classes.core.Loss import Loss
-from utils import scale
 
 """ https://ieeexplore.ieee.org/document/9380693 """
 

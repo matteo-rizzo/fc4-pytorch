@@ -77,12 +77,12 @@ class ModelAdvConfFC4(Model):
         axs[0].set_title("Original")
         axs[0].axis("off")
 
-        conf_base = rescale(conf_base.detach(), size).squeeze(0).permute(1, 2, 0)
+        conf_base = rescale(conf_base.detach().cpu(), size).squeeze(0).permute(1, 2, 0)
         axs[1].imshow(conf_base, cmap="gray")
         axs[1].set_title("Base confidence")
         axs[1].axis("off")
 
-        conf_adv = rescale(conf_adv.detach(), size).squeeze(0).permute(1, 2, 0)
+        conf_adv = rescale(conf_adv.detach().cpu(), size).squeeze(0).permute(1, 2, 0)
         axs[2].imshow(conf_adv, cmap="gray")
         axs[2].set_title("Adv confidence")
         axs[2].axis("off")
