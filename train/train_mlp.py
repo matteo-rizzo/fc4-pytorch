@@ -17,6 +17,7 @@ EPOCHS = 2000
 BATCH_SIZE = 1
 LEARNING_RATE = 0.0003
 FOLD_NUM = 0
+IMPOSED_WEIGHTS = True
 
 
 def main(opt):
@@ -29,7 +30,10 @@ def main(opt):
     os.makedirs(path_to_log, exist_ok=True)
     path_to_metrics_log = os.path.join(path_to_log, "metrics.csv")
 
-    model = ModelMLP()
+    model = ModelMLP(IMPOSED_WEIGHTS)
+    if IMPOSED_WEIGHTS:
+        model.load_attention_net(os.path.join("trained_models", "baseline", "fc4_cwp", "fold_{}".format(fold_num)))
+
     model.print_network()
     model.log_network(path_to_log)
     model.set_optimizer(learning_rate)

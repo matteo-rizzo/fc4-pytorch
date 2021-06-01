@@ -1,3 +1,6 @@
+import os
+
+import torch
 from torch import Tensor
 
 from classes.core.Model import Model
@@ -34,3 +37,7 @@ class ModelMLP(Model):
         loss.backward()
         self._optimizer.step()
         return loss.item()
+
+    def load_attention_net(self, path_to_pretrained: str):
+        path_to_model = os.path.join(path_to_pretrained, "model.pth")
+        self.__attention_net.load_state_dict(torch.load(path_to_model, map_location=self._device))

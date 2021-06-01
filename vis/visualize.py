@@ -33,8 +33,8 @@ def main():
         test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
         dataloader = DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
 
-        # path_to_pretrained = os.path.join("trained_models", "baseline", "fc4_cwp", "fold_{}".format(num_fold), "model.pth")
-        path_to_pretrained = os.path.join("trained_models/softmax/fold_0/model.pth")
+        # path_to_pretrained = os.path.join("trained_models", "baseline", "fc4_cwp", "fold_{}".format(num_fold))
+        path_to_pretrained = os.path.join("trained_models/variance/seed_0/")
         model.load(path_to_pretrained)
         model.evaluation_mode()
 
@@ -49,7 +49,7 @@ def main():
 
                 img, label = img.to(DEVICE), label.to(DEVICE)
                 pred, rgb, confidence = model.predict(img, return_steps=True)
-                loss = model.get_angular_loss(pred, label).item()
+                loss = model.get_loss(pred, label).item()
                 evaluator.add_error(loss)
                 file_name = file_name[0].split(".")[0]
                 print('\t - Input: {} - Batch: {} | Loss: {:f}'.format(file_name, i, loss))

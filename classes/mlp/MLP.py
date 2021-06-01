@@ -9,13 +9,6 @@ class MLP(nn.Module):
 
     def __init__(self):
         super().__init__()
-        # self.layers = nn.Sequential(
-        #     nn.Linear(3 * IMG_H * IMG_W, 128),
-        #     nn.ReLU(),
-        #     nn.Linear(128, 961),
-        #     nn.ReLU(),
-        #     nn.Linear(961, 3)
-        # )
         self.input_layer = nn.Linear(3 * IMG_H * IMG_W, 128)
         self.hidden_layer = nn.Linear(128, 961)
         self.output_layer = nn.Linear(961, 3)
