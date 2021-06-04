@@ -43,5 +43,5 @@ if not USE_CONFIDENCE_WEIGHTED_POOLING:
     print("\n WARN: confidence-weighted pooling option is set to False \n")
 
 # Input size
-IMG_W = 512
-IMG_H = 512
+TRAIN_IMG_W, TRAIN_IMG_H = 512, 512
+TEST_IMG_W, TEST_IMG_H = 512, 512

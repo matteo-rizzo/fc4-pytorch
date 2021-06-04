@@ -17,7 +17,9 @@ EPOCHS = 2000
 BATCH_SIZE = 1
 LEARNING_RATE = 0.0003
 FOLD_NUM = 0
-IMPOSED_WEIGHTS = True
+
+# Modes: None, "confidence", "uniform"
+IMPOSED_WEIGHTS = None
 
 
 def main(opt):
@@ -25,13 +27,14 @@ def main(opt):
     epochs = opt.epochs
     batch_size = opt.batch_size
     learning_rate = opt.lr
+    weights = opt.weights
 
-    path_to_log = os.path.join("logs", "fold_{}_{}".format(str(fold_num), str(time.time())))
+    path_to_log = os.path.join("logs", "{}_fold_{}_{}".format(weights, fold_num, time.time()))
     os.makedirs(path_to_log, exist_ok=True)
     path_to_metrics_log = os.path.join(path_to_log, "metrics.csv")
 
-    model = ModelMLP(IMPOSED_WEIGHTS)
-    if IMPOSED_WEIGHTS:
+    model = ModelMLP(weights)
+    if weights == "confidence":
         model.load_attention_net(os.path.join("trained_models", "baseline", "fc4_cwp", "fold_{}".format(fold_num)))
 
     model.print_network()
@@ -47,7 +50,7 @@ def main(opt):
     print(" Test set size ....... : {}\n".format(len(test_set)))
 
     print("\n**************************************************************")
-    print("\t\t\t Training MLP - Fold {}".format(fold_num))
+    print("\t\t\t Training MLP with '{}' weights - Fold {}".format(weights, fold_num))
     print("**************************************************************\n")
 
     evaluator = Evaluator()
@@ -124,14 +127,16 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=BATCH_SIZE)
     parser.add_argument('--random_seed', type=int, default=RANDOM_SEED)
     parser.add_argument('--lr', type=float, default=LEARNING_RATE)
+    parser.add_argument('--weights', type=float, default=IMPOSED_WEIGHTS)
     opt = parser.parse_args()
     make_deterministic(opt.random_seed)
 
     print("\n *** Training configuration ***")
-    print("\t Fold num ........ : {}".format(opt.fold_num))
-    print("\t Epochs .......... : {}".format(opt.epochs))
-    print("\t Batch size ...... : {}".format(opt.batch_size))
-    print("\t Learning rate ... : {}".format(opt.lr))
-    print("\t Random seed ..... : {}".format(opt.random_seed))
+    print("\t Fold num .......... : {}".format(opt.fold_num))
+    print("\t Epochs ............ : {}".format(opt.epochs))
+    print("\t Batch size ........ : {}".format(opt.batch_size))
+    print("\t Learning rate ..... : {}".format(opt.lr))
+    print("\t Random seed ....... : {}".format(opt.random_seed))
+    print("\t Imposed weights ... : {}".format(opt.weights))
 
     main(opt)

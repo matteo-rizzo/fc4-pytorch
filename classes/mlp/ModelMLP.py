@@ -10,11 +10,11 @@ from classes.mlp.MLP import MLP
 
 class ModelMLP(Model):
 
-    def __init__(self, imposed_weights: bool = False):
+    def __init__(self, imposed_weights: str = None):
         super().__init__()
         self._network = MLP().to(self._device)
         self.__imposed_weights = imposed_weights
-        if imposed_weights:
+        if imposed_weights == "confidence":
             self.__attention_net = FC4().to(self._device)
 
     def predict(self, img: Tensor) -> Tensor:
@@ -24,11 +24,19 @@ class ModelMLP(Model):
         @return: the colour estimate as a Tensor. If "return_steps" is set to true, the per-path colour estimates and
         the confidence weights are also returned (used for visualizations)
         """
-        if self.__imposed_weights:
-            _, _, conf = self.__attention_net(img)
-            return self._network(img, conf)
+        x = img.view(img.shape[0], img.shape[1] * img.shape[2] * img.shape[3])
 
-        return self._network(img)
+        if self.__imposed_weights:
+            w = None
+            if self.__imposed_weights == "confidence":
+                _, _, conf = self.__attention_net(img)
+                w = conf.detach().squeeze(0).expand(3, -1, -1)
+                w = w.view(w.shape[0], w.shape[1] * w.shape[2])
+            if self.__imposed_weights == "uniform":
+                w = torch.rand((3, 961))
+            self._network.impose_weights(w)
+
+        return self._network(x)
 
     def optimize(self, img: Tensor, label: Tensor) -> float:
         self._optimizer.zero_grad()

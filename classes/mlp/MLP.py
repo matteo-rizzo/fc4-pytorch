@@ -1,24 +1,27 @@
 import torch
-from torch import nn
-from torch.nn.functional import normalize, relu
+from torch import nn, tanh
+from torch.nn.functional import normalize
 
-from auxiliary.settings import IMG_H, IMG_W
+from auxiliary.settings import TRAIN_IMG_H, TRAIN_IMG_W
 
 
 class MLP(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.input_layer = nn.Linear(3 * IMG_H * IMG_W, 128)
-        self.hidden_layer = nn.Linear(128, 961)
+        self.input_layer = nn.Linear(3 * TRAIN_IMG_H * TRAIN_IMG_W, 961)
         self.output_layer = nn.Linear(961, 3)
 
-    def forward(self, x: torch.Tensor, w: torch.Tensor = None) -> torch.Tensor:
-        if w is not None:
-            w = w.squeeze(0).expand(3, -1, -1)
-            w = w.view(w.shape[0], w.shape[1] * w.shape[2])
+    def impose_weights(self, w: torch.Tensor):
+        if w is None:
+            raise ValueError("Cannot impose None weights to MLP output layer!")
+        with torch.no_grad():
             self.output_layer.weight = nn.Parameter(w)
-        x = x.view(x.shape[0], x.shape[1] * x.shape[2] * x.shape[3])
-        pred = self.output_layer(relu(self.hidden_layer(relu(self.input_layer(x)))))
-        pred = normalize(pred, dim=1)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.input_layer(x)
+        x = tanh(x)
+        x = self.output_layer(x)
+        x = tanh(x)
+        pred = normalize(x, dim=1)
         return pred
