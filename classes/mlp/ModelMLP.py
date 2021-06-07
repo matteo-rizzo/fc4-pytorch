@@ -34,7 +34,7 @@ class ModelMLP(Model):
                 w = w.view(w.shape[0], w.shape[1] * w.shape[2])
             if self.__imposed_weights == "uniform":
                 w = torch.rand((3, 961))
-            self._network.impose_weights(w)
+            self._network.impose_weights(w.to(self._device))
 
         return self._network(x)
 

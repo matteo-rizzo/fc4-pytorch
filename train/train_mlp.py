@@ -127,7 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch_size', type=int, default=BATCH_SIZE)
     parser.add_argument('--random_seed', type=int, default=RANDOM_SEED)
     parser.add_argument('--lr', type=float, default=LEARNING_RATE)
-    parser.add_argument('--weights', type=float, default=IMPOSED_WEIGHTS)
+    parser.add_argument('--weights', type=str, default=IMPOSED_WEIGHTS)
     opt = parser.parse_args()
     make_deterministic(opt.random_seed)
 
