@@ -12,10 +12,10 @@ class ModelMLP(Model):
 
     def __init__(self, imposed_weights: str = None):
         super().__init__()
-        self._network = MLP().to(self._device)
         self.__imposed_weights = imposed_weights
         if imposed_weights == "confidence":
             self.__attention_net = FC4().to(self._device)
+        self._network = MLP(learn_attention=imposed_weights == "learned").to(self._device)
 
     def predict(self, img: Tensor) -> Tensor:
         """
@@ -26,17 +26,15 @@ class ModelMLP(Model):
         """
         x = img.view(img.shape[0], img.shape[1] * img.shape[2] * img.shape[3])
 
-        if self.__imposed_weights:
-            w = None
-            if self.__imposed_weights == "confidence":
-                _, _, conf = self.__attention_net(img)
-                w = conf.detach().squeeze(0).expand(3, -1, -1)
-                w = w.view(w.shape[0], w.shape[1] * w.shape[2])
-            if self.__imposed_weights == "uniform":
-                w = torch.rand((3, 961))
-            self._network.impose_weights(w.to(self._device))
+        w = None
+        if self.__imposed_weights == "confidence":
+            _, _, conf = self.__attention_net(img)
+            w = conf.detach().squeeze(0).expand(3, -1, -1)
+            w = w.view(w.shape[0], w.shape[1] * w.shape[2]).to(self._device)
+        if self.__imposed_weights == "uniform":
+            w = torch.rand((3, 961)).to(self._device)
 
-        return self._network(x)
+        return self._network(x, w)
 
     def optimize(self, img: Tensor, label: Tensor) -> float:
         self._optimizer.zero_grad()

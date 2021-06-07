@@ -15,7 +15,9 @@ class Model:
         self._network = None
 
     def print_network(self):
+        print("\n----------------------------------------------------------\n")
         print(self._network)
+        print("\n----------------------------------------------------------\n")
 
     def log_network(self, path_to_log: str):
         open(os.path.join(path_to_log, "network.txt"), 'a+').write(str(self._network))

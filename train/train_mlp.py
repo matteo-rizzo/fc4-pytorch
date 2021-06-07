@@ -18,7 +18,7 @@ BATCH_SIZE = 1
 LEARNING_RATE = 0.0003
 FOLD_NUM = 0
 
-# Modes: None, "confidence", "uniform"
+# Modes: None, "learned", "confidence", "uniform"
 IMPOSED_WEIGHTS = None
 
 
