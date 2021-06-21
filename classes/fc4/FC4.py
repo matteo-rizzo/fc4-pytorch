@@ -41,7 +41,8 @@ class FC4(torch.nn.Module):
         and the confidence weights are returned as well (used for visualizations)
         """
 
-        out = self.final_convs(self.backbone(x))
+        x = self.backbone(x)
+        out = self.final_convs(x)
 
         # Confidence-weighted pooling: "out" is a set of semi-dense feature maps
         if USE_CONFIDENCE_WEIGHTED_POOLING:
