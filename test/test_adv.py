@@ -27,12 +27,12 @@ def evaluate(model: ModelAdvConfFC4, dataloader: DataLoader):
             img, label = img.to(DEVICE), label.to(DEVICE)
             (pred, _, confidence), (pred_adv, _, confidence_adv) = model.predict(img)
 
-            loss = model.get_angular_loss(pred, label)
+            loss = model.get_loss(pred, label)
             evaluator.add_error(loss.item())
             eval_data["preds"].append(pred)
             eval_data["conf"].append(torch.flatten(scale(confidence)).numpy())
 
-            loss_adv = model.get_angular_loss(pred_adv, label)
+            loss_adv = model.get_loss(pred_adv, label)
             evaluator_adv.add_error(loss_adv.item())
             eval_data["preds_adv"].append(pred_adv)
             eval_data["conf_adv"].append(torch.flatten(scale(confidence_adv)).numpy())

@@ -42,11 +42,11 @@ def main(opt):
     model.set_optimizer(learning_rate)
 
     training_set = ColorCheckerDataset(train=True, folds_num=fold_num)
-    training_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True, num_workers=20, drop_last=True)
+    training_loader = DataLoader(training_set, batch_size=batch_size, shuffle=True, num_workers=16, drop_last=True)
     print("\n Training set size ... : {}".format(len(training_set)))
 
     test_set = ColorCheckerDataset(train=False, folds_num=fold_num)
-    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=20, drop_last=True)
+    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=16, drop_last=True)
     print(" Test set size ....... : {}\n".format(len(test_set)))
 
     print("\n**************************************************************")

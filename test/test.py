@@ -1,5 +1,7 @@
 import os
+from time import time
 
+import numpy as np
 import torch.utils.data
 
 from auxiliary.settings import DEVICE
@@ -27,22 +29,31 @@ Avg	    1.86	    1.35	    1.46	    0.43	    4.22	    5.21
 StdDev  0.22	    0.23	    0.19	    0.07	    0.52	    0.84
 """
 
-MODEL_TYPE = "fc4_cwp"
+MODEL_TYPE = "baseline/fc4_cwp"
+SAVE_CONF = False
+USE_TRAINING_SET = False
 
 
 def main():
     evaluator = Evaluator()
     model = ModelFC4()
+    path_to_conf, path_to_conf_fold = None, None
+
+    if SAVE_CONF:
+        path_to_conf = os.path.join("test", "conf", "{}_{}".format("train" if USE_TRAINING_SET else "test", time()))
 
     for num_fold in range(3):
         fold_evaluator = Evaluator()
-        test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
-        dataloader = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
+        test_set = ColorCheckerDataset(train=USE_TRAINING_SET, folds_num=num_fold)
+        dataloader = torch.utils.data.DataLoader(test_set, batch_size=1, shuffle=False, num_workers=16)
 
-        # Edit this path to point to the trained model to be tested
-        path_to_pretrained = os.path.join("trained_models", MODEL_TYPE, "fold_{}".format(num_fold), "model.pth")
+        path_to_pretrained = os.path.join("trained_models", MODEL_TYPE, "fold_{}".format(num_fold))
         model.load(path_to_pretrained)
         model.evaluation_mode()
+
+        if SAVE_CONF:
+            path_to_conf_fold = os.path.join(path_to_conf, "fold_{}".format(num_fold))
+            os.makedirs(path_to_conf_fold)
 
         print("\n *** FOLD {} *** \n".format(num_fold))
         print(" * Test set size: {}".format(len(test_set)))
@@ -51,11 +62,13 @@ def main():
         with torch.no_grad():
             for i, (img, label, file_name) in enumerate(dataloader):
                 img, label = img.to(DEVICE), label.to(DEVICE)
-                pred = model.predict(img)
-                loss = model.get_angular_loss(pred, label)
+                pred, _, conf = model.predict(img, return_steps=True)
+                loss = model.get_loss(pred, label)
                 fold_evaluator.add_error(loss.item())
                 evaluator.add_error(loss.item())
                 print('\t - Input: {} - Batch: {} | Loss: {:f}'.format(file_name[0], i, loss.item()))
+                if SAVE_CONF:
+                    np.save(os.path.join(path_to_conf_fold, file_name[0]), conf)
 
         metrics = fold_evaluator.compute_metrics()
         print("\n Mean ............ : {:.4f}".format(metrics["mean"]))
@@ -64,7 +77,6 @@ def main():
         print(" Best 25% ........ : {:.4f}".format(metrics["bst25"]))
         print(" Worst 25% ....... : {:.4f}".format(metrics["wst25"]))
         print(" Percentile 95 ... : {:.4f} \n".format(metrics["wst5"]))
-        exit()
 
     print("\n *** AVERAGE ACROSS FOLDS *** \n")
     metrics = evaluator.compute_metrics()
