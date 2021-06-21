@@ -17,10 +17,11 @@ from classes.training.Evaluator import Evaluator
 NUM_SAMPLES = -1
 
 # The number of folds to be processed (either 1, 2 or 3)
-NUM_FOLDS = 3
+NUM_FOLDS = 1
 
 # Where to save the generated visualizations
-PATH_TO_SAVED = os.path.join("vis", "cc_training_set_{}".format(time.time()))
+# PATH_TO_SAVED = os.path.join("vis", "plots", "cc_train_binary_confidence_{}".format(time.time()))
+PATH_TO_SAVED = os.path.join("vis", "plots", "tmp_{}".format(time.time()))
 
 
 def main():
@@ -32,7 +33,8 @@ def main():
         test_set = ColorCheckerDataset(train=False, folds_num=num_fold)
         dataloader = DataLoader(test_set, batch_size=1, shuffle=False, num_workers=20)
 
-        path_to_pretrained = os.path.join("trained_models", "fc4_cwp", "fold_{}".format(num_fold), "model.pth")
+        # path_to_pretrained = os.path.join("trained_models", "baseline", "fc4_cwp", "fold_{}".format(num_fold))
+        path_to_pretrained = os.path.join("trained_models/variance/seed_0/")
         model.load(path_to_pretrained)
         model.evaluation_mode()
 
@@ -47,7 +49,7 @@ def main():
 
                 img, label = img.to(DEVICE), label.to(DEVICE)
                 pred, rgb, confidence = model.predict(img, return_steps=True)
-                loss = model.get_angular_loss(pred, label).item()
+                loss = model.get_loss(pred, label).item()
                 evaluator.add_error(loss)
                 file_name = file_name[0].split(".")[0]
                 print('\t - Input: {} - Batch: {} | Loss: {:f}'.format(file_name, i, loss))
@@ -57,9 +59,23 @@ def main():
 
                 size = original.size[::-1]
 
+                # ------------------------------------------------------------------------------------------
+                # n, c, h, w = confidence.shape
+                # confidence = confidence.view(n, c, h * w)
+                # confidence = torch.nn.functional.softmax(confidence, dim=2)
+                # confidence = confidence.view(n, c, h, w)
+                # ------------------------------------------------------------------------------------------
+
                 scaled_rgb = rescale(rgb, size).squeeze(0).permute(1, 2, 0)
                 scaled_confidence = rescale(confidence, size).squeeze(0).permute(1, 2, 0)
 
+                # ------------------------------------------------------------------------------------------
+                # For clustering
+                # x, y = torch.ones_like(scaled_confidence), torch.zeros_like(scaled_confidence)
+                # scaled_confidence = torch.where(scaled_confidence > scaled_confidence.mean().item(), x, y)
+                # ------------------------------------------------------------------------------------------
+
+                # weighted_est = scale(rgb * confidence)
                 weighted_est = scale(rgb * confidence)
                 scaled_weighted_est = rescale(weighted_est, size).squeeze().permute(1, 2, 0)
 
@@ -97,6 +113,7 @@ def main():
                 path_to_save = os.path.join(PATH_TO_SAVED, "fold_{}".format(num_fold), file_name)
                 os.makedirs(path_to_save)
 
+                # plt.show()
                 fig.savefig(os.path.join(path_to_save, "stages.png"), bbox_inches='tight', dpi=200)
                 original.save(os.path.join(path_to_save, "original.png"))
                 est_corrected.save(os.path.join(path_to_save, "est_corrected.png"))

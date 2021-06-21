@@ -1,7 +1,7 @@
 from typing import Union
 
 import torch
-from torch import nn
+from torch import nn, Tensor
 from torch.nn.functional import normalize
 
 from auxiliary.settings import USE_CONFIDENCE_WEIGHTED_POOLING
@@ -33,7 +33,7 @@ class FC4(torch.nn.Module):
             nn.ReLU(inplace=True)
         )
 
-    def forward(self, x: torch.Tensor) -> Union[tuple, torch.Tensor]:
+    def forward(self, x: Tensor) -> Union[tuple, Tensor]:
         """
         Estimate an RGB colour for the illuminant of the input image
         @param x: the image for which the colour of the illuminant has to be estimated
@@ -41,7 +41,8 @@ class FC4(torch.nn.Module):
         and the confidence weights are returned as well (used for visualizations)
         """
 
-        out = self.final_convs(self.backbone(x))
+        x = self.backbone(x)
+        out = self.final_convs(x)
 
         # Confidence-weighted pooling: "out" is a set of semi-dense feature maps
         if USE_CONFIDENCE_WEIGHTED_POOLING:

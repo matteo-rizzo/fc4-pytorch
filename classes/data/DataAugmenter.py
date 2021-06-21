@@ -4,6 +4,7 @@ import random
 import cv2
 import numpy as np
 
+from auxiliary.settings import TRAIN_IMG_H, TRAIN_IMG_W, TEST_IMG_H, TEST_IMG_W
 from auxiliary.utils import rgb_to_bgr
 
 
@@ -11,7 +12,8 @@ class DataAugmenter:
 
     def __init__(self):
         # Input Size of the fully-convolutional network (SqueezeNet)
-        self.__fcn_input_size = (512, 512)
+        self.__train_size = (TRAIN_IMG_H, TRAIN_IMG_W)
+        self.__test_size = (TEST_IMG_H, TEST_IMG_W)
 
         # Rotation angle
         self.__angle = 60
@@ -94,8 +96,7 @@ class DataAugmenter:
 
         return bb_w - 2 * x, bb_h - 2 * y
 
-    @staticmethod
-    def __crop_around_center(image: np.ndarray, width: float, height: float) -> np.ndarray:
+    def __crop_around_center(self, image: np.ndarray, width: float, height: float) -> np.ndarray:
         """ Given a NumPy / OpenCV 2 image, crops it to the given width and height around it's centre point """
 
         image_size = (image.shape[1], image.shape[0])
@@ -107,12 +108,19 @@ class DataAugmenter:
         x1, x2 = int(image_center[0] - width * 0.5), int(image_center[0] + width * 0.5)
         y1, y2 = int(image_center[1] - height * 0.5), int(image_center[1] + height * 0.5)
 
-        return image[y1:y2, x1:x2]
+        return cv2.resize(image[y1:y2, x1:x2], self.__train_size)
 
     def __rotate_and_crop(self, image: np.ndarray, angle: float) -> np.ndarray:
         width, height = image.shape[:2]
         target_width, target_height = self.__largest_rotated_rect(width, height, math.radians(angle))
         return self.__crop_around_center(self.__rotate_image(image, angle), target_width, target_height)
+
+    @staticmethod
+    def __random_flip(img: np.ndarray) -> np.ndarray:
+        """ Perform random left/right flip with probability 0.5 """
+        if random.randint(0, 1):
+            img = img[:, ::-1]
+        return img.astype(np.float32)
 
     def augment(self, img: np.ndarray, illumination: np.ndarray) -> tuple:
         scale = math.exp(random.random() * math.log(self.__scale[1] / self.__scale[0])) * self.__scale[0]
@@ -120,15 +128,10 @@ class DataAugmenter:
 
         start_x = random.randrange(0, img.shape[0] - s + 1)
         start_y = random.randrange(0, img.shape[1] - s + 1)
-
         img = img[start_x:start_x + s, start_y:start_y + s]
-        img = self.__rotate_and_crop(img, angle=(random.random() - 0.5) * self.__angle)
-        img = cv2.resize(img, self.__fcn_input_size)
 
-        # Perform random left/right flip with probability 0.5
-        if random.randint(0, 1):
-            img = img[:, ::-1]
-        img = img.astype(np.float32)
+        img = self.__rotate_and_crop(img, angle=(random.random() - 0.5) * self.__angle)
+        img = self.__random_flip(img)
 
         color_aug = np.zeros(shape=(3, 3))
         for i in range(3):
@@ -145,6 +148,5 @@ class DataAugmenter:
 
         return new_image, new_illuminant
 
-    @staticmethod
-    def crop(img: np.ndarray, scale: float = 0.5) -> np.ndarray:
-        return cv2.resize(img, (0, 0), fx=scale, fy=scale)
+    def crop(self, img: np.ndarray, scale: float = 0.5) -> np.ndarray:
+        return cv2.resize(img, self.__test_size, fx=scale, fy=scale)

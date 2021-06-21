@@ -7,3 +7,5 @@ torchvision
 Pillow
 matplotlib
 tqdm
+imageio
+seaborn

@@ -3,13 +3,14 @@ import re
 import numpy as np
 import torch
 
+
 # --- Determinism (for reproducibility) ---
 
-RANDOM_SEED = 0
+def make_deterministic(seed: int):
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    torch.backends.cudnn.benchmark = False
 
-torch.manual_seed(RANDOM_SEED)
-np.random.seed(RANDOM_SEED)
-torch.backends.cudnn.benchmark = False
 
 # --- Device (cpu or cuda:n) ---
 
@@ -40,3 +41,7 @@ DEVICE = get_device()
 USE_CONFIDENCE_WEIGHTED_POOLING = True
 if not USE_CONFIDENCE_WEIGHTED_POOLING:
     print("\n WARN: confidence-weighted pooling option is set to False \n")
+
+# Input size
+TRAIN_IMG_W, TRAIN_IMG_H = 512, 512
+TEST_IMG_W, TEST_IMG_H = 0, 0
