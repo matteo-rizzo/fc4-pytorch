@@ -2,7 +2,7 @@
 
 A PyTorch implementation of "FC4: Fully Convolutional Color Constancy with Confidence-weighted Pooling".
 
-The original code for the FC4 method is quite outdated (based on Python 2 and an old version of Tensorflow). This an
+The original code for the FC4 method is quite outdated (based on Python 2 and an outdated version of Tensorflow). This an
 attempt to provide a clean and modern Python3-based re-implementation of that method using the PyTorch library.
 
 ## FC4: Fully Convolutional Color Constancy with Confidence-weighted Pooling
@@ -66,7 +66,7 @@ metrics and a dump of the network architecture.
 
 ## Training
 
-To train the FC4 model, run `python3 train.py`. The training procedure can be configured by editing the value of the
+To train the FC4 model, run `python3 train/train.py`. The training procedure can be configured by editing the value of the
 global variables at the beginning of the `train.py` file.
 
 ### Monitoring confidence
@@ -81,12 +81,12 @@ set `TEST_VIS_IMG = []` in `train.py`.
 
 ## Testing
 
-To test the FC4 model, run `python3 test.py`. The test procedure can be configured by editing the value of the global
+To test the FC4 model, run `python3 test/test.py`. The test procedure can be configured by editing the value of the global
 variables at the beginning of the `test.py` file.
 
 ## Visualizing confidence
 
-To visualize the confidence weights learned by the FC4 model, run `python3 visualize.py`. The procedure can be
+To visualize the confidence weights learned by the FC4 model, run `python3 vis/visualize.py`. The procedure can be
 configured by editing the value of the global variables at the beginning of the `visualize.py` file.
 
 This is the type of visualization produced by the script:
