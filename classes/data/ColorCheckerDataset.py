@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 
 import numpy as np
 import scipy.io
@@ -17,7 +18,7 @@ class ColorCheckerDataset(data.Dataset):
         self.__da = DataAugmenter()
 
         path_to_folds = os.path.join("dataset", "folds.mat")
-        path_to_metadata = os.path.join("dataset", "color_checker_metadata.txt")
+        path_to_metadata = os.path.join("dataset", "metadata.txt")
         self.__path_to_data = os.path.join("dataset", "preprocessed", "numpy_data")
         self.__path_to_label = os.path.join("dataset", "preprocessed", "numpy_labels")
 
@@ -27,8 +28,7 @@ class ColorCheckerDataset(data.Dataset):
         metadata = open(path_to_metadata, 'r').readlines()
         self.__fold_data = [metadata[i - 1] for i in img_idx]
 
-    def __getitem__(self, index: int) -> tuple:
-
+    def __getitem__(self, index: int) -> Tuple:
         file_name = self.__fold_data[index].strip().split(' ')[1]
         img = np.array(np.load(os.path.join(self.__path_to_data, file_name + '.npy')), dtype='float32')
         illuminant = np.array(np.load(os.path.join(self.__path_to_label, file_name + '.npy')), dtype='float32')
