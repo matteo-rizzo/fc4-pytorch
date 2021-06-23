@@ -10,8 +10,6 @@ from auxiliary.settings import DEVICE, USE_CONFIDENCE_WEIGHTED_POOLING
 from auxiliary.utils import correct, rescale, scale
 from classes.core.Model import Model
 from classes.fc4.FC4 import FC4
-from classes.losses.BlockSparsityLoss import BlockSparsityLoss
-from classes.losses.TotalVariationLoss import TotalVariationLoss
 
 
 class ModelFC4(Model):
@@ -19,8 +17,6 @@ class ModelFC4(Model):
     def __init__(self):
         super().__init__()
         self._network = FC4().to(self._device)
-        self.__bs_loss = BlockSparsityLoss(self._device)
-        self.__tv_loss = TotalVariationLoss(self._device)
 
     def predict(self, img: Tensor, return_steps: bool = False) -> Union[Tensor, tuple]:
         """
