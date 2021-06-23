@@ -14,13 +14,15 @@ Macbeth ColorChecker (MCC) chart, which provides an estimation of illuminant col
 and utilizing MCCs as a visual cue, all images are masked with provided locations of MCC during training and testing
 """
 
-PATH_TO_NUMPY_DATA = os.path.join("preprocessed", "numpy_data")
-PATH_TO_NUMPY_LABELS = os.path.join("preprocessed", "numpy_labels")
-PATH_TO_LINEAR_IMAGES = os.path.join("preprocessed", "linear_images")
-PATH_TO_GT_CORRECTED = os.path.join("preprocessed", "gt_corrected")
 PATH_TO_IMAGES = os.path.join("images")
 PATH_TO_COORDINATES = os.path.join("coordinates")
-PATH_TO_CC_METADATA = os.path.join("color_checker_metadata.txt")
+PATH_TO_CC_METADATA = os.path.join("metadata.txt")
+
+BASE_PATH = "preprocessed"
+PATH_TO_NUMPY_DATA = os.path.join(BASE_PATH, "numpy_data")
+PATH_TO_NUMPY_LABELS = os.path.join(BASE_PATH, "numpy_labels")
+PATH_TO_LINEAR_IMAGES = os.path.join(BASE_PATH, "linear_images")
+PATH_TO_GT_CORRECTED = os.path.join(BASE_PATH, "gt_corrected")
 
 
 def main():
@@ -28,10 +30,10 @@ def main():
     print("\t Masking MCC charts")
     print("\n=================================================\n")
     print("Paths: \n"
-          "\t - Numpy data generated at .......... : {} \n"
-          "\t - Numpy labels generated at ........ : {} \n"
-          "\t - Images fetched from .............. : {} \n"
-          "\t - Coordinates fetched from ......... : {} \n"
+          "\t - Numpy data generated at ..... : {} \n"
+          "\t - Numpy labels generated at ... : {} \n"
+          "\t - Images fetched from ......... : {} \n"
+          "\t - Coordinates fetched from .... : {} \n"
           .format(PATH_TO_NUMPY_DATA, PATH_TO_NUMPY_LABELS, PATH_TO_IMAGES, PATH_TO_COORDINATES))
 
     os.makedirs(PATH_TO_NUMPY_DATA, exist_ok=True)

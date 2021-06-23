@@ -1,5 +1,5 @@
 import os
-from typing import Union
+from typing import Union, Tuple
 
 import matplotlib.pyplot as plt
 import torchvision.transforms.functional as F
@@ -18,7 +18,7 @@ class ModelFC4(Model):
         super().__init__()
         self._network = FC4().to(self._device)
 
-    def predict(self, img: Tensor, return_steps: bool = False) -> Union[Tensor, tuple]:
+    def predict(self, img: Tensor, return_steps: bool = False) -> Union[Tensor, Tuple]:
         """
         Performs inference on the input image using the FC4 method.
         @param img: the image for which an illuminant colour has to be estimated
@@ -41,11 +41,6 @@ class ModelFC4(Model):
         loss.backward()
         self._optimizer.step()
         return loss.item()
-
-    def get_regularized_loss(self, pred: Tensor, label: Tensor, attention_mask: Tensor) -> Tensor:
-        angular = self.get_loss(pred, label)
-        sparsity = self.__bs_loss(attention_mask)
-        return angular + sparsity
 
     def save_vis(self, model_output: dict, path_to_plot: str):
         model_output = {k: v.clone().detach().to(self._device) for k, v in model_output.items()}
