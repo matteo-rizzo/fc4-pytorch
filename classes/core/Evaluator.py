@@ -4,11 +4,10 @@ import numpy as np
 class Evaluator:
 
     def __init__(self):
-        self.__errors = []
-
         monitored_metrics = ["mean", "median", "trimean", "bst25", "wst25", "wst5"]
         self.__metrics = {}
         self.__best_metrics = {m: 100.0 for m in monitored_metrics}
+        self.__errors = []
 
     def add_error(self, error: float):
         self.__errors.append(error)

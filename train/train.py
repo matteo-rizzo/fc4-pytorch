@@ -7,31 +7,33 @@ from torch.utils.data import DataLoader
 
 from auxiliary.settings import DEVICE, USE_CONFIDENCE_WEIGHTED_POOLING, make_deterministic
 from auxiliary.utils import print_metrics, log_metrics
+from classes.core.Evaluator import Evaluator
+from classes.core.LossTracker import LossTracker
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.fc4.ModelFC4 import ModelFC4
-from classes.training.Evaluator import Evaluator
-from classes.training.LossTracker import LossTracker
+
+# --------------------------------------------------------------------------------------------------------------------
 
 RANDOM_SEED = 0
 EPOCHS = 2000
 BATCH_SIZE = 1
 LEARNING_RATE = 0.0003
-
-# Which of the 3 folds should be processed (either 0, 1 or 2)
 FOLD_NUM = 0
 
 # The subset of test images to be monitored (set to empty list to skip saving visualizations and speed up training)
-# TEST_VIS_IMG = ["IMG_0753", "IMG_0438", "IMG_0397"]
+# For example: TEST_VIS_IMG = ["IMG_0753", "IMG_0438", "IMG_0397"]
 TEST_VIS_IMG = []
 
 RELOAD_CHECKPOINT = False
 PATH_TO_PTH_CHECKPOINT = os.path.join("../trained_models", "fold_{}".format(FOLD_NUM))
 
 
+# --------------------------------------------------------------------------------------------------------------------
+
 def main(opt):
     fold_num, epochs, batch_size, lr = opt.fold_num, opt.epochs, opt.batch_size, opt.lr
 
-    path_to_log = os.path.join("logs", "fold_{}_{}".format(str(fold_num), str(time.time())))
+    path_to_log = os.path.join("train", "logs", "fold_{}_{}".format(str(fold_num), str(time.time())))
     os.makedirs(path_to_log, exist_ok=True)
     path_to_metrics_log = os.path.join(path_to_log, "metrics.csv")
 

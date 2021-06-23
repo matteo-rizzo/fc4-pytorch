@@ -11,7 +11,7 @@ from auxiliary.settings import DEVICE
 from auxiliary.utils import correct, rescale, scale
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.fc4.ModelFC4 import ModelFC4
-from classes.training.Evaluator import Evaluator
+from core.Evaluator import Evaluator
 
 # Set to -1 to process all the samples in the test set of the current fold
 NUM_SAMPLES = -1

@@ -5,9 +5,9 @@ import numpy as np
 import torch.utils.data
 
 from auxiliary.settings import DEVICE
+from classes.core.Evaluator import Evaluator
 from classes.data.ColorCheckerDataset import ColorCheckerDataset
 from classes.fc4.ModelFC4 import ModelFC4
-from classes.training.Evaluator import Evaluator
 
 """
 * FC4 using confidence-weighted pooling (fc_cwp):
@@ -30,6 +30,7 @@ StdDev  0.22	    0.23	    0.19	    0.07	    0.52	    0.84
 """
 
 MODEL_TYPE = "baseline/fc4_cwp"
+SAVE_PRED = False
 SAVE_CONF = False
 USE_TRAINING_SET = False
 
@@ -37,7 +38,11 @@ USE_TRAINING_SET = False
 def main():
     evaluator = Evaluator()
     model = ModelFC4()
+    path_to_pred, path_to_pred_fold = None, None
     path_to_conf, path_to_conf_fold = None, None
+
+    if SAVE_PRED:
+        path_to_pred = os.path.join("test", "pred", "{}_{}".format("train" if USE_TRAINING_SET else "test", time()))
 
     if SAVE_CONF:
         path_to_conf = os.path.join("test", "conf", "{}_{}".format("train" if USE_TRAINING_SET else "test", time()))
@@ -51,13 +56,17 @@ def main():
         model.load(path_to_pretrained)
         model.evaluation_mode()
 
+        if SAVE_PRED:
+            path_to_pred_fold = os.path.join(path_to_pred, "fold_{}".format(num_fold))
+            os.makedirs(path_to_pred_fold)
+
         if SAVE_CONF:
             path_to_conf_fold = os.path.join(path_to_conf, "fold_{}".format(num_fold))
             os.makedirs(path_to_conf_fold)
 
         print("\n *** FOLD {} *** \n".format(num_fold))
         print(" * Test set size: {}".format(len(test_set)))
-        print(" * Using pretrained model stored at: {} \n".format(path_to_pretrained))
+        print(" * Using trained model stored at: {} \n".format(path_to_pretrained))
 
         with torch.no_grad():
             for i, (img, label, file_name) in enumerate(dataloader):
@@ -67,6 +76,8 @@ def main():
                 fold_evaluator.add_error(loss.item())
                 evaluator.add_error(loss.item())
                 print('\t - Input: {} - Batch: {} | Loss: {:f}'.format(file_name[0], i, loss.item()))
+                if SAVE_PRED:
+                    np.save(os.path.join(path_to_pred_fold, file_name[0]), pred)
                 if SAVE_CONF:
                     np.save(os.path.join(path_to_conf_fold, file_name[0]), conf)
 
