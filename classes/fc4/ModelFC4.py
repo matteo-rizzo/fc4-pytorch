@@ -6,7 +6,7 @@ import torchvision.transforms.functional as F
 from torch import Tensor
 from torchvision.transforms import transforms
 
-from auxiliary.settings import DEVICE, USE_CONFIDENCE_WEIGHTED_POOLING
+from auxiliary.settings import USE_CONFIDENCE_WEIGHTED_POOLING
 from auxiliary.utils import correct, rescale, scale
 from classes.core.Model import Model
 from classes.fc4.FC4 import FC4
@@ -55,7 +55,7 @@ class ModelFC4(Model):
         weighted_est = rescale(scale(rgb * c), size).squeeze().permute(1, 2, 0)
         rgb = rescale(rgb, size).squeeze(0).permute(1, 2, 0)
         c = rescale(c, size).squeeze(0).permute(1, 2, 0)
-        masked_original = scale(F.to_tensor(original).to(DEVICE).permute(1, 2, 0) * c)
+        masked_original = scale(F.to_tensor(original).to(self._device).permute(1, 2, 0) * c)
 
         plots = [(original, "original"), (masked_original, "masked_original"), (est_corrected, "correction"),
                  (rgb, "per_patch_estimate"), (c, "confidence"), (weighted_est, "weighted_estimate")]
