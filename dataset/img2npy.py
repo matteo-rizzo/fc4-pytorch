@@ -55,8 +55,9 @@ def main():
 
         vis_img = Image.fromarray((linear_to_nonlinear(bgr_to_rgb(normalize(img_without_mcc))) * 255).astype(np.uint8))
         vis_img.save(os.path.join(PATH_TO_LINEAR_IMAGES, file_name))
-
-        gt_corrected = correct(vis_img, torch.from_numpy(np.array([illuminant])))
+        
+        img = Image.fromarray((bgr_to_rgb(normalize(img_without_mcc)) * 255).astype(np.uint8))
+        gt_corrected = correct(img, torch.from_numpy(np.array([illuminant])))
         gt_corrected.save(os.path.join(PATH_TO_GT_CORRECTED, file_name))
 
 
