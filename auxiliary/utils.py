@@ -49,7 +49,7 @@ def correct(img: Image, illuminant: Tensor) -> Image:
     img = F.to_tensor(img).to(DEVICE)
 
     # Correct the image
-    correction = illuminant.unsqueeze(2).unsqueeze(3) * torch.sqrt(Tensor([3])).to(DEVICE)
+    correction = illuminant.unsqueeze(2).unsqueeze(3).to(DEVICE) * torch.sqrt(Tensor([3])).to(DEVICE)
     corrected_img = torch.div(img, correction + 1e-10)
 
     # Normalize the image
